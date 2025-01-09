@@ -1,0 +1,69 @@
+class User < ApplicationRecord
+    require 'chronic'
+
+    after_create :to_e164, :sign_em_up
+
+    def sign_em_up
+        puts "signing up"
+        account_sid = ENV['TWILIO_ACCOUNT_SID']
+        auth_token = ENV['TWILIO_AUTH_TOKEN']
+        twilio_phone_number = ENV['TWILIO_PHONE_NUMBER']
+        @client = Twilio::REST::Client.new(account_sid, auth_token)
+        message = @client.messages.create(
+            from: twilio_phone_number,
+            body: "You are signing up to receive messages from this number in order to receive reminders. Please reply YES if you would like to continue. Message and data rated may apply.",
+            to: self.phone_number
+            )
+        self.update_column(:is_opted_in, :false)
+        notify_me(self.phone_number)
+    end
+
+    def to_e164
+        phone_number = self.phone_number
+        phone_number.gsub!(/[^0-9]/, '')
+        phone_number = "+1#{phone_number[0..2]}-#{phone_number[3..5]}-#{phone_number[6..9]}" if phone_number.length === 10
+        phone_number = "+1#{phone_number[1..3]}-#{phone_number[4..6]}-#{phone_number[7..10]}" if phone_number.length === 11
+        self.update_column(:phone_number, phone_number)
+    end
+
+    def list_jobs
+        jobs = []
+        j = Delayed::Job.where(user_id: self.id)
+        j.each do |jo|
+            jobs << jo
+        end
+        jobs
+    end
+
+    def jobs_count
+        list_jobs.count
+    end
+
+    def notify_me(who)
+        from = Email.new(email: 'info@192dnsserver.com')
+        to = Email.new(email: 'eliklein02@gmail.com')
+        subject = "New User Signup"
+        content = Content.new(type: 'text/plain', value: "A new user has signed up with the phone number: #{who}")
+        mail = Mail.new(from, subject, to, content)
+
+
+        sg = SendGrid::API.new(api_key: ENV['SENDGRID_API_KEY'])
+        response = sg.client.mail._('send').post(request_body: mail.to_json)
+    end
+
+    def self.list_numbers
+        users = []
+        User.all.each do |u|
+            users << u.phone_number
+        end
+        users
+    end
+
+    def schedule_reminder(time, subject)
+        u = User.find(self.id)
+        puts u.inspect
+        job = ReminderJob.set(wait_until: time).perform_later(self.id, subject)
+        x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
+        x
+    end
+end

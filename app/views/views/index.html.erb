@@ -1,0 +1,104 @@
+<style>
+  body {
+    background: linear-gradient(135deg, #2c3e50, #4ca1af);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+  }
+  .card {
+    background: rgba(0, 0, 0, 0.7);
+    border: none;
+  }
+  .form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+  }
+  .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+</style>
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card p-4">
+        <div class="card-body">
+          <h3 class="card-title text-center text-success">
+            Enter Your Phone Number
+          </h3>
+          <form class="d-flex flex-column justify-content-center">
+            <div class="form-group">
+              <input
+                type="text"
+                class="form-control mb-4"
+                id="input-bar"
+                placeholder="Phone Number"
+              />
+            </div>
+            <button type="submit" id="hi" class="btn btn-primary btn-block">
+              Submit
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <button id="do-something">Click Me</button>
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const inputButton = document.getElementById("hi");
+    inputButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      const inputValue = document.getElementById("input-bar").value;
+      if (inputValue === "") {
+        alert("No value");
+        return;
+      }
+      fetch("/check_phone_number", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": document
+            .querySelector('meta[name="csrf-token"]')
+            .getAttribute("content"),
+        },
+        body: JSON.stringify({ phone_number: inputValue }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          alert(data.message);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("An error occurred");
+        });
+    });
+
+    const doSomethingButton = document.getElementById("do-something");
+    doSomethingButton.addEventListener("click", () => {
+      fetch("/do_something", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": document
+            .querySelector('meta[name="csrf-token"]')
+            .getAttribute("content"),
+        },
+        body: JSON.stringify({ message: "Hello World" }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          alert(data.message);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("An error occurred");
+        });
+    });
+  });
+</script>
