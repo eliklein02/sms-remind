@@ -282,7 +282,7 @@ GEM
       faraday-multipart (>= 1)
     ruby-progressbar (1.13.0)
     ruby_http_client (3.5.5)
-    rubyzip (2.4)
+    rubyzip (2.4.1)
     securerandom (0.4.1)
     selenium-webdriver (4.27.0)
       base64 (~> 0.2)
@@ -362,6 +362,7 @@ DEPENDENCIES
   rails (~> 7.2.2, >= 7.2.2.1)
   rubocop-rails-omakase
   ruby-openai (~> 7.3)
+  rubyzip (~> 2.4.1)
   selenium-webdriver
   sendgrid-ruby (~> 6.7)
   sprockets-rails
