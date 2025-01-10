@@ -85,9 +85,12 @@
 FROM ruby:3.3.5
 
 # Set environment variables
+ENV BUNDLE_PATH="/usr/local/bundle"
+ENV BUNDLE_WITHOUT="development"
+ENV LD_LIBRARY_PATH="/usr/lib:/usr/local/lib"
 ENV RAILS_ENV=production
 ENV RACK_ENV=production
-ENV SECRET_KEY_BASE=1056788230cb26f98428a5a28ecb230c5da5fd96eb113ffc54dee4efb12f4f8dcb79ef43e2d8b047e2b8595e4cf50cf0e31a22841db0fef6e8e5bf7e0ab6ab12
+ENV SECRET_KEY_BASE="1056788230cb26f98428a5a28ecb230c5da5fd96eb113ffc54dee4efb12f4f8dcb79ef43e2d8b047e2b8595e4cf50cf0e31a22841db0fef6e8e5bf7e0ab6ab12"
 
 # Install dependencies
 RUN apt-get update -qq && apt-get install -y \
@@ -117,7 +120,7 @@ COPY . .
 #RUN bundle exec rake assets:precompile
 
 # Expose port 3000
-EXPOSE 3050
+EXPOSE 3500
 
 # Start the Rails server, ensuring the server.pid file is removed
-CMD ["bash", "-c", "rm -f /app/tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p 3001"]
+CMD ["bash", "-c", "rm -f /app/tmp/pids/server.pid && bundle exec rails server -b 0.0.0.0 -p 3500"]
