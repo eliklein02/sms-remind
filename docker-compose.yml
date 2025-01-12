@@ -12,7 +12,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
-  demo-web:
+  web:
     build: .
     command: "./bin/rails server -p 3500"
     environment:
@@ -24,7 +24,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
     volumes:
-      - app-storage:/rails/storage
+      - ~/sms-remind:/rails
+      - ~/sms-remind/storage:/rails/storage
     depends_on:
       - db
     ports:
@@ -32,4 +33,3 @@ services:
 
 volumes:
   postgres_data: {}
-  app-storage: {}
