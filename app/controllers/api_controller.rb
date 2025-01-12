@@ -95,7 +95,7 @@ class ApiController < ApplicationController
             temperature: 0.7
           }
         )
-        render json: { message: response.dig("choices", 0, "message", "content")}
+        render json: { message: response.dig("choices", 0, "message", "content"), message2: "All good" }
         # render json: { message: "Success" }
     end
 
