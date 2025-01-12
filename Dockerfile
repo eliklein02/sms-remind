@@ -26,6 +26,10 @@ RUN bundle install
 # Copy application code
 COPY . .
 
+# Add wait-for-it script
+COPY wait-for-it.sh /usr/bin/wait-for-it.sh
+RUN chmod +x /usr/bin/wait-for-it.sh
+
 RUN yarn config set strict-ssl false
 
 # Install JavaScript dependencies
