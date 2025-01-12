@@ -35,6 +35,8 @@ RUN yarn config set strict-ssl false
 # Install JavaScript dependencies
 RUN yarn install
 
+RUN RAILS_ENV=production bundle exec rake assets:precompile
+
 # Precompile bootsnap code for faster boot times
 RUN bundle exec bootsnap precompile --gemfile app/ lib/
 
