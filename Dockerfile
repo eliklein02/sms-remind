@@ -1,26 +1,46 @@
-# Use the official Ruby image from the Docker Hub
-FROM ruby:3.5.5
+# Make sure it matches the Ruby version in .ruby-version and Gemfile
+ARG RUBY_VERSION=3.3.5
+FROM ruby:$RUBY_VERSION
 
-# Install dependencies
-RUN apt-get update -qq && apt-get install -y nodejs postgresql-client
+# Install libvips for Active Storage preview support
+RUN apt-get update -qq && \
+    apt-get install -y build-essential libvips bash bash-completion libffi-dev tzdata postgresql nodejs npm ca-certificates && \
+    npm config set strict-ssl false && \
+    npm install -g yarn && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man
 
-# Set the working directory
-WORKDIR /app
+# Rails app lives here
+WORKDIR /rails
 
-# Copy the Gemfile and Gemfile.lock
+# Set production environment
+ENV RAILS_LOG_TO_STDOUT="1" \
+    RAILS_SERVE_STATIC_FILES="true" \
+    RAILS_ENV="production" \
+    BUNDLE_WITHOUT="development"
+
+# Install application gems
 COPY Gemfile Gemfile.lock ./
-
-# Install the gems
 RUN bundle install
 
-# Copy the rest of the application code
+# Copy application code
 COPY . .
 
-# Precompile assets
-RUN bundle exec rake assets:precompile
+RUN yarn config set strict-ssl false
 
-# Expose port 3000 to the Docker host
+# Install JavaScript dependencies
+RUN yarn install
+
+# Precompile bootsnap code for faster boot times
+RUN bundle exec bootsnap precompile --gemfile app/ lib/
+
+# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
+RUN SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile
+
+# Entrypoint prepares the database.
+ENTRYPOINT ["/rails/bin/docker-entrypoint"]
+
+# Start the server by default, this can be overwritten at runtime
 EXPOSE 3500
 
-# Start the Rails server
-CMD ["bin/rails", "server", "-b", "0.0.0.0"]
+CMD ["wait-for-it.sh", "db:5432", "--", "./bin/rails", "server", "-p", "3500"]
