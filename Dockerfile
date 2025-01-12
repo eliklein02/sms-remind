@@ -17,7 +17,8 @@ WORKDIR /rails
 ENV RAILS_LOG_TO_STDOUT="1" \
     RAILS_SERVE_STATIC_FILES="true" \
     RAILS_ENV="production" \
-    BUNDLE_WITHOUT="development"
+    BUNDLE_WITHOUT="development" \
+    SECRET_KEY_BASE="1056788230cb26f98428a5a28ecb230c5da5fd96eb113ffc54dee4efb12f4f8dcb79ef43e2d8b047e2b8595e4cf50cf0e31a22841db0fef6e8e5bf7e0ab6ab12"
 
 # Install application gems
 COPY Gemfile Gemfile.lock ./
