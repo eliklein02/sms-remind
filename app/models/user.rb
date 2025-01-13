@@ -1,5 +1,7 @@
 class User < ApplicationRecord
     require 'chronic'
+    require 'sendgrid-ruby'
+    include SendGrid
 
     after_create :to_e164, :sign_em_up
 
