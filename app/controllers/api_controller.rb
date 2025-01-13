@@ -13,7 +13,7 @@ class ApiController < ApplicationController
         when "register", "signup"
             u = User.find_or_create_by(phone_number: from_number)
         when "yes"
-            u = User.find_by(phone_number: from_number)
+            u = User.find_by(phone_number: to_e164(from_number))
             return if u.nil?
             u.update(is_opted_in: true)
             send_sms(from_number, "Thank you for opting in to receive messages. Example usage: 'remind me tomorrow morning to pick up my shirts'. Reply STOP to opt out.")
