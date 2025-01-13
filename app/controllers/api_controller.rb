@@ -110,7 +110,7 @@ class ApiController < ApplicationController
         number = to_e164(params[:phone_number])
         puts number
         user = User.find_by(phone_number: number)
-        render json: { message: "User not found", user: user } if user.nil?
+        render json: { message: "User not found", user: user } and return if user.nil?
         render json: { message: "User found", user: user }
     end
 
