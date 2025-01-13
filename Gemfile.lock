@@ -161,7 +161,7 @@ GEM
     jwt (2.10.1)
       base64
     language_server-protocol (3.17.0.3)
-    logger (1.6.4)
+    logger (1.6.5)
     loofah (2.24.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
@@ -332,7 +332,7 @@ GEM
     turbo-rails (2.0.11)
       actionpack (>= 6.0.0)
       railties (>= 6.0.0)
-    twilio-ruby (7.4.0)
+    twilio-ruby (7.4.1)
       faraday (>= 0.9, < 3.0)
       jwt (>= 1.5, < 3.0)
       nokogiri (>= 1.6, < 2.0)
