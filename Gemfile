@@ -79,3 +79,5 @@ gem "dotenv-rails", "~> 3.1"
 gem "jquery-rails", "~> 4.6"
 
 gem "rack-cors", "~> 2.0"
+
+gem 'bootstrap', '~> 5.1.3'
