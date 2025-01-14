@@ -63,7 +63,7 @@ class User < ApplicationRecord
 
     def schedule_reminder(time, subject)
         u = User.find(self.id)
-        # time = time.in_time_zone("Eastern Time (US & Canada)")
+        time = time.in_time_zone("Eastern Time (US & Canada)")
         job = ReminderJob.set(wait_until: time).perform_later(self.id, subject)
         x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
         x = Delayed::Job.find_by(id: job.provider_job_id)
