@@ -23,6 +23,6 @@ class ReminderJob < ApplicationJob
         body: "Reminder: #{what}",
         to: to
     )
-    puts message
+    logger.info "Sent SMS to #{to} with message: #{message.body}"
   end
 end
