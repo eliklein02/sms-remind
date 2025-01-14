@@ -67,6 +67,23 @@ class User < ApplicationRecord
         job = ReminderJob.set(wait_until: time).perform_later(self.id, subject)
         x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
         x = Delayed::Job.find_by(id: job.provider_job_id)
+        time_zone_set = time.in_time_zone("Eastern Time (US & Canada)")
+        time_parsed = time_zone_set.strftime("%A, %B %d, %Y, at %I:%M:%S %p")
+        send_sms(self.phone_number, "Your reminder (#{subject}) has been set for #{time_parsed}")
         x
+    end
+
+    def send_sms(to, what)
+        what.strip!
+        account_sid = ENV['TWILIO_ACCOUNT_SID']
+        auth_token = ENV['TWILIO_AUTH_TOKEN']
+        twilio_phone_number = ENV['TWILIO_PHONE_NUMBER']
+        @client = Twilio::REST::Client.new(account_sid, auth_token)
+        message = @client.messages.create(
+            from: twilio_phone_number,
+            body: "Reminder: #{what}",
+            to: to
+        )
+        puts message
     end
 end
