@@ -38,3 +38,9 @@
 !/app/assets/builds/.keep
 
 /node_modules
+
+/db/development.sqlite3
+/db/test.sqlite3
+/db/development.sqlite3-shm
+/db/development.sqlite3-wal
+/db/schema.rb

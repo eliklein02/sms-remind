@@ -1,6 +1,6 @@
 class ReminderJob < ApplicationJob
 
-  require 'twilio-ruby'
+  # require 'twilio-ruby'
 
   queue_as :default
 
