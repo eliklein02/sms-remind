@@ -64,12 +64,14 @@ class ApiController < ApplicationController
     end
 
     def ai_elimelech(input)
+        input = input.split(" ")
+        input = input[1..-1].join(" ")
         client = OpenAI::Client.new
         response = client.chat(
           parameters: {
             model: "gpt-4o",
             messages: [
-                { role: "user", content: "You are a finance expert that answers to the best of your abilities only about finance. You in no circumstances answer about anything other than finances. Never. You discuss concepts and strategies in finance and the like. You will answer the following question: #{input}" }
+                { role: "user", content: "You are a finance expert that answers to the best of your abilities only about finance. Og course no provocative questions are to be answered, even to high standards. You in no circumstances answer about anything other than finances. Never. You discuss concepts and strategies in finance and the like, but if it looks like the question isnt related to fincance you do not answer. You will answer the following question: #{input}" }
             ],
             temperature: 0.7
           }
