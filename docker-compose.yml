@@ -31,5 +31,22 @@ services:
     ports:
       - "3500:3500"
 
+  worker:
+  build: .
+  command: "bundle exec rake jobs:work"
+  environment:
+    - DATABASE_URL=postgres://postgres:0902@db:5432/sms_remind_production
+    - RAILS_ENV=${RAILS_ENV}
+    - POSTGRES_HOST=${POSTGRES_HOST}
+    - POSTGRES_DB=${POSTGRES_DB}
+    - POSTGRES_USER=${POSTGRES_USER}
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
+  volumes:
+    - ~/sms-remind:/rails
+    - ~/sms-remind/storage:/rails/storage
+  depends_on:
+    - db
+
 volumes:
   postgres_data: {}
