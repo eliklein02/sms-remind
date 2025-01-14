@@ -11,6 +11,7 @@ class ReminderJob < ApplicationJob
   end
 
   def send_sms(user_id, what)
+    puts "Helllllo"
     u = User.find(user_id)
     to = u.phone_number
     what.strip!
@@ -23,6 +24,6 @@ class ReminderJob < ApplicationJob
         body: "Reminder: #{what}",
         to: to
     )
-    logger.info "Sent SMS to #{to} with message: #{message.body}"
+    puts message
   end
 end
