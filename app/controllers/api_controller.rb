@@ -49,7 +49,7 @@ class ApiController < ApplicationController
           parameters: {
             model: "gpt-4o",
             messages: [
-                { role: "user", content: "You are a natural language time parser. You will return the time and subject given to you by a human in the following format: 'yyyy-mm-dd, hh:mm:ss (AM/PM)#subject of the reminder.
+                { role: "user", content: "You are a natural language time parser. You will return the time and subject given to you by a human in the following format with eastern standar time: 'yyyy-mm-dd, hh:mm:ss (AM/PM)#subject of the reminder.
                                         You will take the current time, and use the natural language time given to you by the user to return the time in the format I just mentioned.
                                         You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something 
                                         includig 'tomorrow', or the like, you will return the same day because that is what they mean). You will return ONLY the time in the format I mentioned,
