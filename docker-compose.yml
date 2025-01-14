@@ -46,7 +46,7 @@ services:
       - ~/sms-remind:/rails
       - ~/sms-remind/storage:/rails/storage
     depends_on:
-      - db
+      - web
 
 volumes:
   postgres_data: {}
