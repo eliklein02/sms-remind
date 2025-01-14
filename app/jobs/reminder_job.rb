@@ -5,6 +5,7 @@ class ReminderJob < ApplicationJob
   queue_as :default
 
   def perform(*args)
-   puts args[0]
+    puts args[0]
+    puts args[1]
   end
 end

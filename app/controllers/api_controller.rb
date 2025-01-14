@@ -36,6 +36,7 @@ class ApiController < ApplicationController
             end
             puts formatted_time
             job = u.schedule_reminder(formatted_time, subject)
+            puts "Job: #{job}"
         end
         render json: { message: "All Good" }, status: :ok
     end

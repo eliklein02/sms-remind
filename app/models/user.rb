@@ -66,6 +66,7 @@ class User < ApplicationRecord
         puts u.inspect
         job = ReminderJob.set(wait_until: time).perform_later(self.id, subject)
         x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
+        x = Delayed::Job.find_by(id: job.provider_job_id)
         x
     end
 end
