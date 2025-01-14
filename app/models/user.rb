@@ -63,15 +63,11 @@ class User < ApplicationRecord
 
     def schedule_reminder(time, subject)
         u = User.find(self.id)
-        puts u.inspect
+        time = time.in_time_zone("Eastern Time (US & Canada)")
         job = ReminderJob.set(wait_until: time).perform_later(self.id, subject)
         x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
         x = Delayed::Job.find_by(id: job.provider_job_id)
-        puts "time: #{time}"
-        time_zone_set = time.in_time_zone("Eastern Time (US & Canada)")
-        puts "time_zone_set: #{time_zone_set}"
-        time_parsed = time_zone_set.strftime("%A, %B %d, %Y, at %I:%M:%S %p")
-        puts "time_parsed: #{time_parsed}"
+        time_parsed = time.strftime("%A, %B %d, %Y, at %I:%M:%S %p")
         send_sms(self.phone_number, "Your reminder (#{subject}) has been set for #{time_parsed}")
         x
     end

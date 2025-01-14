@@ -17,33 +17,19 @@ class ApiController < ApplicationController
             return if u.nil?
             u.update(is_opted_in: true)
             send_sms(from_number, "Thank you for opting in to receive messages. Example usage: 'remind me tomorrow morning to pick up my shirts'. Reply STOP to opt out.")
+        when "finance"
+            ai_parsed = ai_elimelech(body)
+            send_sms(from_number, ai_parsed)
         else
-            u = User.find_by(phone_number: to_e164(from_number))
-            puts u.inspect
-            send_sms(from_number, "You are not registered to receive messages from Remind. Please reply with 'register' to sign up.") and return if u.nil?
-            send_sms(from_number, "You have not replied YES to the confirmation message. Please reply YES to continue.") and return if u.is_opted_in === false
-            jobs_count = u.jobs_count
-            send_sms(from_number, "Exceeded free tier limit of 3 active reminders. Reply UPGRADE to updagrade yout account" ) and return if jobs_count >= 3
-            puts u.jobs_count
-            ai_parsed = ai_sms_parser(body)
-            puts ai_parsed
-            time = ai_parsed.split("#")[0]
-            subject = ai_parsed.split("#")[1]
-            formatted_time = Chronic.parse(time)
-            if formatted_time.nil? || formatted_time === ""
-                send_sms(from_number, "You did not provide a valid date/time. Please try again.")
-                return
-            end
-            puts formatted_time
-            job = u.schedule_reminder(formatted_time, subject)
-            puts "Job: #{job}"
+            handle_else(from_number, body)
         end
         render json: { message: "All Good" }, status: :ok
     end
 
     def ai_sms_parser(input)
         now = Time.now
-        now = now.strftime("%Y-%m-%d (%A) %I:%M:%S %p")
+        now = now.strftime("%Y-%m-%d (%A) %I:%M:%S %p, %Z")
+        puts now
         client = OpenAI::Client.new
         response = client.chat(
           parameters: {
@@ -52,8 +38,10 @@ class ApiController < ApplicationController
                 { role: "user", content: "You are a natural language time parser. You will return the time and subject given to you by a human in the following format with eastern standar time: 'yyyy-mm-dd, hh:mm:ss (AM/PM)#subject of the reminder.
                                         You will take the current time, and use the natural language time given to you by the user to return the time in the format I just mentioned.
                                         You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something 
-                                        includig 'tomorrow', or the like, you will return the same day because that is what they mean). You will return ONLY the time in the format I mentioned,
-                                        and no more words.
+                                        including 'tomorrow', or the like, you will return the same day because that is what they mean.
+                                        Or another example, if the user says a specific time, you will return the next instance of that time on the clock, so if now is 1pm and they say 1 oclock that means 1am and so forth, unless of course specified otherwise.)
+                                        You will return ONLY the time in the format I mentioned, and no more words.
+                                        You will also return the subject with correct capitalization and corrected spelling errors.
                                         Here is the current time: #{now}
                                         Here is the user's time: #{input}" }
             ],
@@ -73,6 +61,20 @@ class ApiController < ApplicationController
             body: what,
             to: to
         )
+    end
+
+    def ai_elimelech(input)
+        client = OpenAI::Client.new
+        response = client.chat(
+          parameters: {
+            model: "gpt-4o",
+            messages: [
+                { role: "user", content: "You are a finance expert that answers to the best of your abilities only about finance. You in no circumstances answer about anything other than finances. Never. You discuss concepts and strategies in finance and the like. You will answer the following question: #{input}" }
+            ],
+            temperature: 0.7
+          }
+        )
+        response.dig("choices", 0, "message", "content")
     end
 
     def test_json
@@ -121,5 +123,23 @@ class ApiController < ApplicationController
         phone_number = "+1#{phone_number[0..2]}-#{phone_number[3..5]}-#{phone_number[6..9]}" if phone_number.length === 10
         phone_number = "+1#{phone_number[1..3]}-#{phone_number[4..6]}-#{phone_number[7..10]}" if phone_number.length === 11
         phone_number
+    end
+
+    def handle_else(from_number, body)
+        u = User.find_by(phone_number: to_e164(from_number))
+        jobs_count = u.jobs_count
+        send_sms(from_number, "You are not registered to receive messages from Remind. Please reply with 'register' to sign up.") and return if u.nil?
+        send_sms(from_number, "You have not replied YES to the confirmation message. Please reply YES to continue.") and return if u.is_opted_in === false
+        send_sms(from_number, "Exceeded free tier limit of 3 active reminders. Reply UPGRADE to updagrade yout account") and return if jobs_count >= 3
+        ai_parsed = ai_sms_parser(body)
+        puts ai_parsed
+        time = ai_parsed.split("#")[0]
+        subject = ai_parsed.split("#")[1]
+        formatted_time = Chronic.parse(time)
+        if formatted_time.nil? || formatted_time === ""
+            send_sms(from_number, "You did not provide a valid date/time. Please try again.")
+            return
+        end
+        job = u.schedule_reminder(formatted_time, subject)
     end
 end
