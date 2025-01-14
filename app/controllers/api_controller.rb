@@ -131,8 +131,8 @@ class ApiController < ApplicationController
         u = User.find_by(phone_number: to_e164(from_number))
         send_sms(from_number, "You are not registered to receive messages from Remind. Please reply with 'register' to sign up.") and return if u.nil?
         send_sms(from_number, "You have not replied YES to the confirmation message. Please reply YES to continue.") and return if u.is_opted_in === false
-        send_sms(from_number, "Exceeded free tier limit of 3 active reminders. Reply UPGRADE to updagrade yout account") and return if jobs_count >= 3
         jobs_count = u.jobs_count
+        send_sms(from_number, "Exceeded free tier limit of 3 active reminders. Reply UPGRADE to updagrade yout account") and return if jobs_count >= 3
         ai_parsed = ai_sms_parser(body)
         puts ai_parsed
         time = ai_parsed.split("#")[0]
