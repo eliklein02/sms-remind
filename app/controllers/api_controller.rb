@@ -53,7 +53,7 @@ class ApiController < ApplicationController
                                         You will take the current time, and use the natural language time given to you by the user to return the time in the format I just mentioned.
                                         You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something 
                                         includig 'tomorrow', or the like, you will return the same day because that is what they mean). You will return ONLY the time in the format I mentioned,
-                                        and no more words, only in parentheses, you will return the logic of how you came to that conclusion in 8 words or less.
+                                        and no more words.
                                         Here is the current time: #{now}
                                         Here is the user's time: #{input}" }
             ],
