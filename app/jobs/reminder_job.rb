@@ -5,6 +5,7 @@ class ReminderJob < ApplicationJob
   queue_as :default
 
   def perform(*args)
+    Rails.logger.info "Sending SMS"
     u_id = args[0]
     subject = args[1]
     send_sms(u_id, subject)
