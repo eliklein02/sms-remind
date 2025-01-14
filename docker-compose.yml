@@ -23,6 +23,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
+      - TZ=America/New_York
     volumes:
       - ~/sms-remind:/rails
       - ~/sms-remind/storage:/rails/storage
@@ -42,6 +43,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
+      - TZ=America/New_York
     volumes:
       - ~/sms-remind:/rails
       - ~/sms-remind/storage:/rails/storage
