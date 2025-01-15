@@ -23,6 +23,9 @@ class ApiController < ApplicationController
         when "cancel"
             job_id = body_down.split(" ")[1]
             job = Delayed::Job.find(job_id)
+            sender = User.find(phone_number: from_number)
+            job_user = User.find(job.user_id)
+            send_sms(from_number, "Nice try :)") and return if job_user.id != sender.id
             job.destroy
             send_sms(from_number, "Reminder has been successfully cancelled.")
         else
