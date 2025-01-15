@@ -23,7 +23,7 @@ class ApiController < ApplicationController
         when "cancel"
             job_id = body_down.split(" ")[1]
             job = Delayed::Job.find(job_id)
-            sender = User.find(phone_number: from_number)
+            sender = User.find_by(phone_number: to_e164(from_number))
             job_user = User.find(job.user_id)
             send_sms(from_number, "Nice try :)") and return if job_user.id != sender.id
             job.destroy
