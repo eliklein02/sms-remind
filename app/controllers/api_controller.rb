@@ -29,19 +29,20 @@ class ApiController < ApplicationController
     def ai_sms_parser(input)
         now = Time.now
         now = now.strftime("%Y-%m-%d (%A) %I:%M:%S %p, %Z")
-        puts now
         client = OpenAI::Client.new
         response = client.chat(
           parameters: {
             model: "gpt-4o",
             messages: [
-                { role: "user", content: "You are a natural language time parser. You will return the time and subject given to you by a human in the following format with eastern standar time: 'yyyy-mm-dd, hh:mm:ss (AM/PM)#subject of the reminder.
+                { role: "user", content: "You are a natural language time parser. You will return the time and subject and type of reminder given to you by a human in the following format in eastern standar time: 'yyyy-mm-dd, hh:mm:ss (AM/PM)#subject of the reminder#type of reminder.
                                         You will take the current time, and use the natural language time given to you by the user to return the time in the format I just mentioned.
-                                        You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something 
-                                        including 'tomorrow', or the like, you will return the same day because that is what they mean.
+                                        You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something
+                                        including 'tomorrow', or the like, you will return the date as the same day because that is what they mean.
                                         Or another example, if the user says a specific time, you will return the next instance of that time on the clock, so if now is 1pm and they say 1 oclock that means 1am and so forth, unless of course specified otherwise.)
                                         You will return ONLY the time in the format I mentioned, and no more words.
-                                        You will also return the subject with correct capitalization and corrected spelling errors.
+                                        Seconds are also valid, they might say in a minute and 30 seconds, and you will return the current time plus 1 minute and 30 seconds and so forth for other time increments.
+                                        You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
+                                        As for the third section, the type, by default you will return as 'sms' unless specified as call, in which case you will return 'voice'.
                                         Here is the current time: #{now}
                                         Here is the user's time: #{input}" }
             ],
@@ -137,11 +138,13 @@ class ApiController < ApplicationController
         puts ai_parsed
         time = ai_parsed.split("#")[0]
         subject = ai_parsed.split("#")[1]
+        type = ai_parsed.split("#")[2]
         formatted_time = Chronic.parse(time)
         if formatted_time.nil? || formatted_time === ""
             send_sms(from_number, "You did not provide a valid date/time. Please try again.")
             return
         end
-        job = u.schedule_reminder(formatted_time, subject)
+        job = u.schedule_reminder(formatted_time, subject, type)
     end
+
 end

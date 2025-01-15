@@ -61,15 +61,27 @@ class User < ApplicationRecord
         users
     end
 
-    def schedule_reminder(time, subject)
-        u = User.find(self.id)
-        time = time.in_time_zone("Eastern Time (US & Canada)")
-        job = ReminderJob.set(wait_until: time).perform_later(self.id, subject)
-        x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
-        x = Delayed::Job.find_by(id: job.provider_job_id)
+    def schedule_reminder(time, subject, type)
+        time = Time.parse(time.to_s)
+        time_est = time.in_time_zone('Eastern Time (US & Canada)')
         time_parsed = time.strftime("%A, %B %d, %Y, at %I:%M:%S %p")
-        send_sms(self.phone_number, "Your reminder (#{subject}) has been set for #{time_parsed}")
-        x
+        time_utc = time_est.utc
+        case type
+        when "sms"
+            job = ReminderJob.set(wait_until: time_utc).perform_later(self.id, subject)
+            x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
+            x = Delayed::Job.find_by(id: job.provider_job_id)
+            send_sms(self.phone_number, "Your reminder (#{subject}) has been set for #{time_parsed}")
+            x
+        when "voice"
+            job = ReminderCallJob.set(wait_until: time_utc).perform_later(self.id, subject)
+            x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
+            x = Delayed::Job.find_by(id: job.provider_job_id)
+            send_sms(self.phone_number, "Your call reminder (#{subject}) has been set for #{time_parsed}")
+            x
+        else
+            return
+        end
     end
 
     def send_sms(to, what)
