@@ -20,6 +20,11 @@ class ApiController < ApplicationController
         when "finance"
             ai_parsed = ai_elimelech(body)
             send_sms(from_number, ai_parsed)
+        when "cancel"
+            job_id = body_down.split(" ")[1]
+            job = Delayed::Job.find(job_id)
+            job.destroy
+            send_sms(from_number, "Reminder has been successfully cancelled.")
         else
             handle_else(from_number, body)
         end

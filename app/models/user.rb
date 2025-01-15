@@ -71,13 +71,13 @@ class User < ApplicationRecord
             job = ReminderJob.set(wait_until: time_utc).perform_later(self.id, subject)
             x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
             x = Delayed::Job.find_by(id: job.provider_job_id)
-            send_sms(self.phone_number, "Your reminder (#{subject}) has been set for #{time_parsed}")
+            send_sms(self.phone_number, "Your reminder (#{subject}) has been set for #{time_parsed}. Reply 'Cancel #{x.id}' to cancel.")
             x
         when "voice"
             job = ReminderCallJob.set(wait_until: time_utc).perform_later(self.id, subject)
             x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
             x = Delayed::Job.find_by(id: job.provider_job_id)
-            send_sms(self.phone_number, "Your call reminder (#{subject}) has been set for #{time_parsed}")
+            send_sms(self.phone_number, "Your call reminder (#{subject}) has been set for #{time_parsed}.  Reply 'Cancel #{x.id}' to cancel.")
             x
         else
             return
