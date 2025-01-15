@@ -11,7 +11,7 @@ class ApiController < ApplicationController
         body_first_word = body_down.split(" ")[0]
         case body_first_word
         when "register", "signup"
-            u = User.find_or_create_by(phone_number: from_number)
+            u = User.find_or_create_by(phone_number: to_e164(from_number))
         when "yes"
             u = User.find_by(phone_number: to_e164(from_number))
             return if u.nil?
