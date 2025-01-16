@@ -41,6 +41,7 @@
               Submit
             </button>
           </form>
+          
         </div>
       </div>
     </div>
@@ -49,6 +50,11 @@
     <button id="do-something">Click Me</button>
   </div>
 </div>
+<%= form_with url: check_phone_number_path, method: :post, local: true do |form| %>
+  <%= form.label :phone_number, "Phone Number:" %>
+  <%= form.text_field :phone_number %>
+  <%= form.submit "Check" %>
+<% end %>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const inputButton = document.getElementById("hi");
@@ -71,11 +77,11 @@
       })
         .then((response) => response.json())
         .then((data) => {
-          alert(data.message);
+          console.log("Success:", data);
+          // Handle the response data here
         })
         .catch((error) => {
           console.error("Error:", error);
-          alert("An error occurred");
         });
     });
 

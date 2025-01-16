@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>User Details</title>
+  </head>
+  <body>
+    <h1>User Details</h1>
+    <p>ID: <%= @u.id %></p>
+    <p>Phone Number: <%= @u.phone_number %></p>
+    <p>Active reminders: </p>
+    <% @reminders.each do |r| %>
+        <%= r.id %>
+    <% end %>
+  </body>
+</html>

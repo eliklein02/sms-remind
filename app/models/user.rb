@@ -5,6 +5,8 @@ class User < ApplicationRecord
 
     after_create :to_e164, :sign_em_up
 
+    enum tier: { free: 0, paid: 1 }
+
     def sign_em_up
         puts "signing up"
         account_sid = ENV['TWILIO_ACCOUNT_SID']
@@ -13,7 +15,7 @@ class User < ApplicationRecord
         @client = Twilio::REST::Client.new(account_sid, auth_token)
         message = @client.messages.create(
             from: twilio_phone_number,
-            body: "You are signing up to receive messages from this number in order to receive reminders. Please reply YES if you would like to continue. Message and data rated may apply.",
+            body: "You are signing up to receive messages from this number in order to receive reminders. Please reply YES if you would like to continue. Message and data rates may apply.",
             to: self.phone_number
             )
         self.update_column(:is_opted_in, :false)
@@ -74,11 +76,15 @@ class User < ApplicationRecord
             send_sms(self.phone_number, "Your reminder (#{subject}) has been set for #{time_parsed}. Reply 'Cancel #{x.id}' to cancel.")
             x
         when "voice"
-            job = ReminderCallJob.set(wait_until: time_utc).perform_later(self.id, subject)
-            x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
-            x = Delayed::Job.find_by(id: job.provider_job_id)
-            send_sms(self.phone_number, "Your call reminder (#{subject}) has been set for #{time_parsed}.  Reply 'Cancel #{x.id}' to cancel.")
-            x
+            if self.tier === "free"
+                send_sms(self.phone_number, "You can not use voice reminders on the free tier. Reply UPGRADE to upgrade to the paid plan.")
+            else
+                job = ReminderCallJob.set(wait_until: time_utc).perform_later(self.id, subject)
+                x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
+                x = Delayed::Job.find_by(id: job.provider_job_id)
+                send_sms(self.phone_number, "Your call reminder (#{subject}) has been set for #{time_parsed}.  Reply 'Cancel #{x.id}' to cancel.")
+                x
+            end
         else
             return
         end

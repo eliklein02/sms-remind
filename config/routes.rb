@@ -11,15 +11,17 @@ Rails.application.routes.draw do
 
   root "views#index"
 
-  get "home" => "views#index"
+  get "home" => "views#home"
 
-  post "/check_phone_number" => "api#check_phone_number"
+  post "/check_phone_number" => "views#check_phone_number"
 
   post "/do_something" => "api#do_something"
 
   get "/test_json" => "api#test_json" 
 
   post "/twilio_webhook" => "api#twilio_webhook"
+
+  get "/user/:id" => "views#user", as: "user"
 
   # Defines the root path route ("/")
   # root "posts#index"

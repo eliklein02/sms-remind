@@ -120,14 +120,6 @@ class ApiController < ApplicationController
         end
     end
 
-    def check_phone_number
-        number = to_e164(params[:phone_number])
-        puts number
-        user = User.find_by(phone_number: number)
-        render json: { message: "User not found", user: user } and return if user.nil?
-        render json: { message: "User found", user: user }
-    end
-
     def to_e164(pn)
         phone_number = pn
         phone_number.gsub!(/[^0-9]/, '')
@@ -141,7 +133,7 @@ class ApiController < ApplicationController
         send_sms(from_number, "You are not registered to receive messages from Remind. Please reply with 'register' to sign up.") and return if u.nil?
         send_sms(from_number, "You have not replied YES to the confirmation message. Please reply YES to continue.") and return if u.is_opted_in === false
         jobs_count = u.jobs_count
-        send_sms(from_number, "Exceeded free tier limit of 3 active reminders. Reply UPGRADE to updagrade yout account") and return if jobs_count >= 3
+        send_sms(from_number, "Exceeded free tier limit of 3 active reminders. Reply UPGRADE to upgrade yout account") and return if jobs_count >= 3 && u.tier === "free"
         ai_parsed = ai_sms_parser(body)
         puts ai_parsed
         time = ai_parsed.split("#")[0]
