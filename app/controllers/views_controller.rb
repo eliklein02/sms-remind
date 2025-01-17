@@ -24,11 +24,11 @@ class ViewsController < ApplicationController
     end
 
     def user
-        @u = User.find(params[:id])
-        @reminders = Delayed::Job.where(user_id: @u.id)
+        @user = User.find(params[:id])
+        @reminders = Delayed::Job.where(user_id: @user.id)
         respond_to do |format|
             format.html
-            format.json { render json: { user: @u } }
+            format.json { render json: { user: @user } }
         end
     end
 
