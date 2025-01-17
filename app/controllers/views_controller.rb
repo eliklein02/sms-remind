@@ -38,7 +38,7 @@ class ViewsController < ApplicationController
         render json: { message: "Failure" } and return if u.nil?
         otp = rand(100000..999999).to_s
         u.update(tmp_otp: otp)
-        # send_sms(params[:phone_number], "Your OTP is #{otp}, do not share this with anybody.")
+        send_sms(params[:phone_number], "Your OTP is #{otp}, do not share this with anybody.")
         render json: { message: "Success" }
     end
 
