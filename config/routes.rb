@@ -23,6 +23,14 @@ Rails.application.routes.draw do
 
   get "/user/:id" => "views#user", as: "user"
 
+  post "/send_otp" => "views#send_otp"
+
+  post "/verify_otp" => "views#verify_otp"
+
+  get "/privacy_policy" => "views#privacy_policy"
+
+  get "/terms_and_conditions" => "views#terms_and_conditions"
+
   # Defines the root path route ("/")
   # root "posts#index"
 end

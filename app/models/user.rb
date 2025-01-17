@@ -8,17 +8,16 @@ class User < ApplicationRecord
     enum tier: { free: 0, paid: 1 }
 
     def sign_em_up
-        puts "signing up"
         account_sid = ENV['TWILIO_ACCOUNT_SID']
         auth_token = ENV['TWILIO_AUTH_TOKEN']
         twilio_phone_number = ENV['TWILIO_PHONE_NUMBER']
         @client = Twilio::REST::Client.new(account_sid, auth_token)
         message = @client.messages.create(
             from: twilio_phone_number,
-            body: "You are signing up to receive messages from this number in order to receive reminders. Please reply YES if you would like to continue. Message and data rates may apply.",
+            body: "Thank you for signing up to Remind. Message and data rates may apply. View our privacy policy at http://192dnsserver.com/privacy_policy, and out terms and conditions at http://192dnsserver.com/terms_and_conditions. Reply STOP to opt out. ",
             to: self.phone_number
             )
-        self.update_column(:is_opted_in, :false)
+        self.update_column(:is_opted_in, :true)
         notify_me(self.phone_number)
     end
 

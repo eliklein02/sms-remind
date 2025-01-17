@@ -12,17 +12,13 @@ class ApiController < ApplicationController
         case body_first_word
         when "register", "signup"
             u = User.find_or_create_by(phone_number: to_e164(from_number))
-        when "yes"
-            u = User.find_by(phone_number: to_e164(from_number))
-            return if u.nil?
-            u.update(is_opted_in: true)
-            send_sms(from_number, "Thank you for opting in to receive messages. Example usage: 'remind me tomorrow morning to pick up my shirts'. Reply STOP to opt out.")
         when "finance"
             ai_parsed = ai_elimelech(body)
             send_sms(from_number, ai_parsed)
         when "cancel"
             job_id = body_down.split(" ")[1]
             job = Delayed::Job.find(job_id)
+            return if job.nil?
             sender = User.find_by(phone_number: to_e164(from_number))
             job_user = User.find(job.user_id)
             send_sms(from_number, "Nice try :)") and return if job_user.id != sender.id
