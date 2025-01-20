@@ -119,9 +119,8 @@ class ApiController < ApplicationController
 
     def to_e164(phone_number)
         phone_number.gsub!(/[^0-9]/, '')
-        puts phone_number
-        phone_number = "#{phone_number[0..2]}-#{phone_number[3..5]}-#{phone_number[6..9]}" if phone_number.length === 10
-        phone_number = "#{phone_number[1..3]}-#{phone_number[4..6]}-#{phone_number[7..10]}" if phone_number.length === 11
+        phone_number = "+1#{phone_number[0..2]}-#{phone_number[3..5]}-#{phone_number[6..9]}" if phone_number.length === 10
+        phone_number = "+1#{phone_number[1..3]}-#{phone_number[4..6]}-#{phone_number[7..10]}" if phone_number.length === 11
         phone_number
     end
 
@@ -143,4 +142,5 @@ class ApiController < ApplicationController
         end
         job = u.schedule_reminder(formatted_time, subject, type)
     end
+
 end
