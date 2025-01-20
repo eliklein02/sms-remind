@@ -10,6 +10,16 @@ class ViewsController < ApplicationController
         render json: { message: "App is running", time: Chronic.parse('now') }
     end
 
+    def delete_job
+        job_id = params[:jobId]
+        job = Delayed::Job.find(job_id)
+        if job.destroy
+            render json: { message: "Successfully deleted the reminder." }
+        else
+            render json: { message: "Failed to delete the reminder. Please try again in a few minutes." }
+        end
+    end
+
     def privacy_policy
     end
 

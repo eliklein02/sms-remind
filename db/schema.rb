@@ -10,10 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_01_05_053432) do
-  # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
-
+ActiveRecord::Schema[7.2].define(version: 2025_01_16_233000) do
   create_table "delayed_jobs", force: :cascade do |t|
     t.integer "priority", default: 0, null: false
     t.integer "attempts", default: 0, null: false
@@ -36,5 +33,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_01_05_053432) do
     t.string "name"
     t.string "phone_number"
     t.boolean "is_opted_in", default: false
+    t.integer "tier", default: 0
+    t.string "tmp_otp"
   end
 end

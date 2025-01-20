@@ -39,17 +39,17 @@ body {
             <ul class="list-group">
                 <% @reminders.each do |r| %>
                 <% job_data = YAML.safe_load(r.handler, permitted_classes: [ActiveJob::QueueAdapters::DelayedJobAdapter::JobWrapper]) %>
-                <li class="list-group-item">
+                <li class="list-group-item" data-job-id="<%= r.id %>" >
                     <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>Reminder Type:</strong> <%= job_data.job_data['job_class'] == "ReminderJob" ? "SMS" : "Call" %><br>
-                        <strong>Subject:</strong> <%= job_data.job_data['arguments'][1] %><br>
-                        <strong>Scheduled At:</strong> <%= job_data.job_data['scheduled_at'].to_date.strftime("%Y-%m-%d (%A) %I:%M:%S %p") %>
-                    </div>
-                    <div class="d-flex">
-                        <button class="btn btn-warning btn-sm me-2">Edit</button>
-                        <button id="cancel-btn" class="btn btn-danger btn-sm" data-job-id="<%= r.id %>" >Cancel</button>
-                    </div>
+                        <div>
+                            <strong>Reminder Type:</strong> <%= job_data.job_data['job_class'] == "ReminderJob" ? "SMS" : "Call" %><br>
+                            <strong>Subject:</strong> <%= job_data.job_data['arguments'][1] %><br>
+                            <strong>Scheduled At:</strong> <%= r.run_at&.strftime("%Y-%m-%d (%A) %I:%M:%S %p") %>
+                        </div>
+                        <div class="d-flex">
+                            <button id="edit-btn" class="btn btn-warning btn-sm me-2" data-job-id="<%= r.id %>">Edit</button>
+                            <button id="cancel-btn" class="btn btn-danger btn-sm" data-job-id="<%= r.id %>" >Cancel</button>
+                        </div>
                     </div>
                 </li>
                 <% end %>
@@ -64,6 +64,7 @@ body {
     document.addEventListener("DOMContentLoaded", () => {
         
         const cancelBtns = document.querySelectorAll("#cancel-btn")
+        const editBtns = document.querySelectorAll("#edit-btn")
 
         cancelBtns.forEach(btn => {
             btn.addEventListener("click", (event) => {
@@ -72,10 +73,43 @@ body {
 
 
                 if (confirm("Are You Sure?")) {
-                    alert("Deleting" + jobId)
+                    fetch("/delete_reminder", {
+                        method: "POST",
+                         headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-Token": document
+                                .querySelector('meta[name="csrf-token"]')
+                                .getAttribute("content"),
+                            },
+                        body: JSON.stringify({ jobId: jobId })
+                    })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.message == "Successfully deleted the reminder.") {
+                            location.reload();
+                        } else {
+                            alert(data.message)
+                        }
+                    })
                 } else {
                     return
                 }
+            })
+        })
+
+
+        editBtns.forEach((btn) => {
+
+            btn.addEventListener("click", (event) => {
+                event.preventDefault()
+
+                jobId = btn.getAttribute("data-job-id")
+                alert(jobId)
+
+                const job_div = document.querySelector(`li[data-job-id="${jobId}"]`)
+                const inner_div = job_div.querySelectorAll("div")
+                console.log(job_div)
+                console.log(inner_div)
             })
         })
     })    

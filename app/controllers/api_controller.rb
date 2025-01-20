@@ -40,6 +40,7 @@ class ApiController < ApplicationController
             messages: [
                 { role: "user", content: "You are a natural language time parser. You will return the time and subject and type of reminder given to you by a human in the following format in eastern standar time: 'yyyy-mm-dd, hh:mm:ss (AM/PM)#subject of the reminder#type of reminder.
                                         You will take the current time, and use the natural language time given to you by the user to return the time in the format I just mentioned.
+                                        If no time is provided, and there is only a subject, you will return the time as one hour from now.
                                         You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something
                                         including 'tomorrow', or the like, you will return the date as the same day because that is what they mean.
                                         Or another example, if the user says a specific time, you will return the next instance of that time on the clock, so if now is 1pm and they say 1 oclock that means 1am and so forth, unless of course specified otherwise.)
@@ -48,7 +49,7 @@ class ApiController < ApplicationController
                                         You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
                                         As for the third section, the type, by default you will return as 'sms' unless specified as call, in which case you will return 'voice'.
                                         Here is the current time: #{now}
-                                        Here is the user's time: #{input}" }
+                                        Here is the user's time: #{input}"}
             ],
             temperature: 0.7
           }
@@ -116,11 +117,11 @@ class ApiController < ApplicationController
         end
     end
 
-    def to_e164(pn)
-        phone_number = pn
+    def to_e164(phone_number)
         phone_number.gsub!(/[^0-9]/, '')
-        phone_number = "+1#{phone_number[0..2]}-#{phone_number[3..5]}-#{phone_number[6..9]}" if phone_number.length === 10
-        phone_number = "+1#{phone_number[1..3]}-#{phone_number[4..6]}-#{phone_number[7..10]}" if phone_number.length === 11
+        puts phone_number
+        phone_number = "#{phone_number[0..2]}-#{phone_number[3..5]}-#{phone_number[6..9]}" if phone_number.length === 10
+        phone_number = "#{phone_number[1..3]}-#{phone_number[4..6]}-#{phone_number[7..10]}" if phone_number.length === 11
         phone_number
     end
 
@@ -142,5 +143,4 @@ class ApiController < ApplicationController
         end
         job = u.schedule_reminder(formatted_time, subject, type)
     end
-
 end

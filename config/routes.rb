@@ -31,6 +31,8 @@ Rails.application.routes.draw do
 
   get "/terms_and_conditions" => "views#terms_and_conditions"
 
+  post "/delete_reminder" => "views#delete_job"
+
   # Defines the root path route ("/")
   # root "posts#index"
 end
