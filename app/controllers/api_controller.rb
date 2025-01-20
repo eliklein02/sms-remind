@@ -49,7 +49,7 @@ class ApiController < ApplicationController
                                         You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
                                         As for the third section, the type, by default you will return as 'sms' unless specified as call, in which case you will return 'voice'.
                                         Here is the current time: #{now}
-                                        Here is the user's time: #{input}"}
+                                        Here is the user's time: #{input}" }
             ],
             temperature: 0.7
           }
