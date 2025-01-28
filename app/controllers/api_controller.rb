@@ -1,5 +1,9 @@
 class ApiController < ApplicationController
     require 'chronic'
+    require 'nokogiri'
+    require 'twilio-ruby'
+
+
 
     skip_before_action :verify_authenticity_token
 
@@ -47,7 +51,8 @@ class ApiController < ApplicationController
                                         You will return ONLY the time in the format I mentioned, and no more words.
                                         Seconds are also valid, they might say in a minute and 30 seconds, and you will return the current time plus 1 minute and 30 seconds and so forth for other time increments.
                                         You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
-                                        As for the third section, the type, by default you will return as 'sms' unless specified as call, in which case you will return 'voice'.
+                                        As for the third section, the type, by default you will return as 'sms' unless specified as call, which means that they are instructing you to call as the method of reminding them,
+                                        but if the subject of the reminder includes a phone call, that does not warrant this rule, in which case you will return 'voice'.
                                         Here is the current time: #{now}
                                         Here is the user's time: #{input}" }
             ],
@@ -143,4 +148,67 @@ class ApiController < ApplicationController
         job = u.schedule_reminder(formatted_time, subject, type)
     end
 
+    def xml
+        puts params
+        phone_number = to_e164(params[:From])
+        user = User.find_or_create_by(phone_number: phone_number)
+        response = Twilio::TwiML::VoiceResponse.new
+        # response.say(message: "Hello", voice: "woman")
+        # response.say(voice: "woman", message: "Hello, #{user.tier}")
+        response.pause(length: 1)
+        response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/reg", num_digits: 1) do |g|
+            g.say(voice: "woman", message: "Press 1 if you would like to upgrade your account. Otherwise press 2.")
+        end
+        response.say(voice: "woman", message: "Did not reach")
+        render xml: response.to_s
+    end
+
+    def reg
+        digit = params[:Digits]
+        case digit
+        when "1"
+            response = Twilio::TwiML::VoiceResponse.new
+            response.redirect('https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/upgrade')
+            render xml: response.to_s
+        else
+            response = Twilio::TwiML::VoiceResponse.new
+            response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/r_cb", input: "speech", speech_timeout: "1") do |g|
+                g.say(voice: "woman", message: "Go ahead and tell me what you would like to be reminded about.")
+            end
+            response.say(voice: "woman", message: "Did not reach")
+            render xml: response.to_s
+        end
+    end
+
+    def upgrade
+        response = Twilio::TwiML::VoiceResponse.new
+        response.say(voice: "woman", message: "Upgrading via phone line is not currently available. Neither is is available anywhere else.")
+        response.pause(length: 0.75)
+        render xml: response.to_s
+    end
+
+    def r_cb
+        result = params[:SpeechResult]
+        ai_parsed = ai_sms_parser(result)
+        puts ai_parsed
+        time = ai_parsed.split("#")[0]
+        subject = ai_parsed.split("#")[1]
+        type = ai_parsed.split("#")[2]
+        response = Twilio::TwiML::VoiceResponse.new
+        response.say(voice: "woman", message: "You said #{subject}, at #{time}")
+        response.pause(length: 0.75)
+        render xml: response.to_s
+    end
+
+    def simple_xml
+        xml_response = <<-XML
+        <Response>
+            <Gather action="https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/collect_reminder" input="speech" speechTimeout="2">
+                <Say voice="woman">Go ahead and tell me what you would like to be reminded about.</Say>
+            </Gather>
+        </Response>
+        XML
+
+        render xml: xml_response
+    end
 end

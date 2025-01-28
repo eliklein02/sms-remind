@@ -17,7 +17,7 @@ Rails.application.routes.draw do
 
   post "/do_something" => "api#do_something"
 
-  get "/test_json" => "api#test_json" 
+  get "/test_json" => "api#test_json"
 
   post "/twilio_webhook" => "api#twilio_webhook"
 
@@ -32,6 +32,16 @@ Rails.application.routes.draw do
   get "/terms_and_conditions" => "views#terms_and_conditions"
 
   post "/delete_reminder" => "views#delete_job"
+
+  post "/xml" => "api#xml"
+
+  post "/reg" => "api#reg"
+
+  post "/upgrade" => "api#upgrade"
+
+  post "/r_cb" => "api#r_cb"
+
+  get '/simple_xml', to: 'api#simple_xml'
 
   # Defines the root path route ("/")
   # root "posts#index"
