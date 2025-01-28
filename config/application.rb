@@ -21,7 +21,8 @@ module SmsRemind
 
     config.active_job.queue_adapter = :delayed_job
 
-    config.hosts << "3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app"
+    config.hosts << "3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/"
+    config.hosts << "192dnsserver.com"
 
 
     # Configuration for the application, engines, and railties goes here.
