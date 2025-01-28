@@ -51,8 +51,8 @@ class ApiController < ApplicationController
                                         You will return ONLY the time in the format I mentioned, and no more words.
                                         Seconds are also valid, they might say in a minute and 30 seconds, and you will return the current time plus 1 minute and 30 seconds and so forth for other time increments.
                                         You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
-                                        As for the third section, the type, by default you will return as 'sms' unless specified as call, which means that they are instructing you to call as the method of reminding them,
-                                        but if the subject of the reminder includes a phone call, that does not warrant this rule, in which case you will return 'voice'.
+                                        As for the third section, the type, by default you will return as 'sms' unless specified as call, in which case you will return 'voice'. But this is ONLY when the instruction is to call them to remind them as the reminder type,
+                                        but if the subject of the reminder includes a phone call, like the user wants to remember to make a phone call, it still should be sms as the reminder type unless specified otherwise.
                                         Here is the current time: #{now}
                                         Here is the user's time: #{input}" }
             ],
