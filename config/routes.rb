@@ -33,15 +33,15 @@ Rails.application.routes.draw do
 
   post "/delete_reminder" => "views#delete_job"
 
-  post "/xml" => "api#xml"
+  post "/phone_call_callback" => "api#phone_call_callback"
 
-  post "/reg" => "api#reg"
+  post "/phone_call_fallback" => "api#phone_call_fallback"
+
+  post "/upgrade_or_reminder" => "api#upgrade_or_reminder"
 
   post "/upgrade" => "api#upgrade"
 
-  post "/r_cb" => "api#r_cb"
-
-  get '/simple_xml', to: 'api#simple_xml'
+  post "/remind" => "api#remind"
 
   # Defines the root path route ("/")
   # root "posts#index"

@@ -8,6 +8,7 @@ class User < ApplicationRecord
     enum tier: { free: 0, paid: 1 }
 
     def sign_em_up
+        return if self.account_source == "voice"
         account_sid = ENV['TWILIO_ACCOUNT_SID']
         auth_token = ENV['TWILIO_AUTH_TOKEN']
         twilio_phone_number = ENV['TWILIO_PHONE_NUMBER']
@@ -18,6 +19,7 @@ class User < ApplicationRecord
             to: self.phone_number
             )
         self.update_column(:is_opted_in, :true)
+        self.update_column(:account_source, "sms")
         notify_me(self.phone_number)
     end
 
@@ -62,7 +64,7 @@ class User < ApplicationRecord
         users
     end
 
-    def schedule_reminder(time, subject, type)
+    def schedule_reminder(time, subject, type, source)
         time = Time.parse(time.to_s)
         time_est = time.in_time_zone('Eastern Time (US & Canada)')
         time_parsed = time.strftime("%A, %B %d, %Y, at %I:%M:%S %p")
@@ -75,13 +77,17 @@ class User < ApplicationRecord
             send_sms(self.phone_number, "Your reminder (#{subject}) has been set for #{time_parsed}. Reply 'Cancel #{x.id}' to cancel.")
             x
         when "voice"
-            if self.tier === "free"
+            if self.tier === "free" && source != "voice"
                 send_sms(self.phone_number, "You can not use voice reminders on the free tier. Reply UPGRADE to upgrade to the paid plan.")
             else
                 job = ReminderCallJob.set(wait_until: time_utc).perform_later(self.id, subject)
                 x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
                 x = Delayed::Job.find_by(id: job.provider_job_id)
-                send_sms(self.phone_number, "Your call reminder (#{subject}) has been set for #{time_parsed}.  Reply 'Cancel #{x.id}' to cancel.")
+                if source == "sms"
+                    puts "is sms"
+                    puts source
+                    send_sms(self.phone_number, "Your call reminder (#{subject}) has been set for #{time_parsed}.  Reply 'Cancel #{x.id}' to cancel.")
+                end
                 x
             end
         else

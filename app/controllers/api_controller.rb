@@ -2,6 +2,7 @@ class ApiController < ApplicationController
     require 'chronic'
     require 'nokogiri'
     require 'twilio-ruby'
+    require 'net/http'
 
 
 
@@ -28,6 +29,10 @@ class ApiController < ApplicationController
             send_sms(from_number, "Nice try :)") and return if job_user.id != sender.id
             job.destroy
             send_sms(from_number, "Reminder has been successfully cancelled.")
+        when "word"
+            word = body.split(" ")[1]
+            defiinition = get_definition(word)
+            send_sms(from_number, defiinition)
         else
             handle_else(from_number, body)
         end
@@ -52,6 +57,33 @@ class ApiController < ApplicationController
                                         Seconds are also valid, they might say in a minute and 30 seconds, and you will return the current time plus 1 minute and 30 seconds and so forth for other time increments.
                                         You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
                                         As for the third section, the type, by default you will return as 'sms' unless the user specifies you to call as the reminder type, (NOT IF THE SUBJECT INCLUDES A PHONE CALL AS WHAT THEY NEED TO BE REMINDED ABOUT) in which case you will return 'voice'.
+                                        Here is the current time: #{now}
+                                        Here is the user's time: #{input}" }
+            ],
+            temperature: 0.7
+          }
+        )
+        response.dig("choices", 0, "message", "content")
+    end
+
+    def ai_sms_parser_voice(input)
+        now = Time.now
+        now = now.strftime("%Y-%m-%d (%A) %I:%M:%S %p, %Z")
+        client = OpenAI::Client.new
+        response = client.chat(
+          parameters: {
+            model: "gpt-4o",
+            messages: [
+                { role: "user", content: "You are a natural language time parser. You will return the time and subject and type of reminder given to you by a human in the following format in eastern standar time: 'yyyy-mm-dd, hh:mm:ss (AM/PM)#subject of the reminder#type of reminder.
+                                        You will take the current time, and use the natural language time given to you by the user to return the time in the format I just mentioned.
+                                        If no time is provided, and there is only a subject, you will return the time as one hour from now.
+                                        You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something
+                                        including 'tomorrow', or the like, you will return the date as the same day because that is what they mean.
+                                        Or another example, if the user says a specific time, you will return the next instance of that time on the clock, so if now is 1pm and they say 1 oclock that means 1am and so forth, unless of course specified otherwise.)
+                                        You will return ONLY the time in the format I mentioned, and no more words.
+                                        Seconds are also valid, they might say in a minute and 30 seconds, and you will return the current time plus 1 minute and 30 seconds and so forth for other time increments.
+                                        You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
+                                        As for the third section, the type, by default you will return as 'voice' unless the user specifies you to call as the reminder type, (NOT IF THE SUBJECT INCLUDES A PHONE CALL AS WHAT THEY NEED TO BE REMINDED ABOUT) in which case you will return 'sms'.
                                         Here is the current time: #{now}
                                         Here is the user's time: #{input}" }
             ],
@@ -114,6 +146,15 @@ class ApiController < ApplicationController
         # render json: { message: "Success" }
     end
 
+    def get_definition(word)
+        url = "https://www.dictionaryapi.com/api/v3/references/collegiate/json/#{word}?key=#{ENV['DICTIONARY_API_KEY']}"
+        uri = URI(url)
+        response = Net::HTTP.get(uri)
+        response = JSON.parse(response)
+        definition = response[0]["shortdef"]
+        return definition
+    end
+
     def do_something
         time = Chronic.parse('in 5 seconds')
         respond_to do |format|
@@ -147,22 +188,20 @@ class ApiController < ApplicationController
         job = u.schedule_reminder(formatted_time, subject, type)
     end
 
-    def xml
-        puts params
+    def phone_call_callback
         phone_number = to_e164(params[:From])
         user = User.find_or_create_by(phone_number: phone_number)
+        user.update(account_source: "voice")
         response = Twilio::TwiML::VoiceResponse.new
-        # response.say(message: "Hello", voice: "woman")
-        # response.say(voice: "woman", message: "Hello, #{user.tier}")
         response.pause(length: 1)
-        response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/reg", num_digits: 1) do |g|
+        response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/upgrade_or_reminder", num_digits: 1) do |g|
             g.say(voice: "woman", message: "Press 1 if you would like to upgrade your account. Otherwise press 2.")
         end
         response.say(voice: "woman", message: "Did not reach")
         render xml: response.to_s
     end
 
-    def reg
+    def upgrade_or_reminder
         digit = params[:Digits]
         case digit
         when "1"
@@ -171,8 +210,8 @@ class ApiController < ApplicationController
             render xml: response.to_s
         else
             response = Twilio::TwiML::VoiceResponse.new
-            response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/r_cb", input: "speech", speech_timeout: "1") do |g|
-                g.say(voice: "woman", message: "Go ahead and tell me what you would like to be reminded about.")
+            response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/remind", input: "speech", speech_timeout: "1") do |g|
+                g.say(voice: "woman", message: "Go ahead")
             end
             response.say(voice: "woman", message: "Did not reach")
             render xml: response.to_s
@@ -186,28 +225,31 @@ class ApiController < ApplicationController
         render xml: response.to_s
     end
 
-    def r_cb
+    def remind
         result = params[:SpeechResult]
-        ai_parsed = ai_sms_parser(result)
-        puts ai_parsed
+        u = User.find_by(phone_number: to_e164(params[:From]))
+        ai_parsed = ai_sms_parser_voice(result)
         time = ai_parsed.split("#")[0]
         subject = ai_parsed.split("#")[1]
         type = ai_parsed.split("#")[2]
-        response = Twilio::TwiML::VoiceResponse.new
-        response.say(voice: "woman", message: "You said #{subject}, at #{time}")
-        response.pause(length: 0.75)
-        render xml: response.to_s
+        formatted_time = Chronic.parse(time)
+        job = u.schedule_reminder(formatted_time, subject, type, "voice")
+        if job
+            response = Twilio::TwiML::VoiceResponse.new
+            response.say(voice: "woman", message: "You said #{subject}, at #{time}")
+            response.pause(length: 0.75)
+            render xml: response.to_s
+        else
+            response = Twilio::TwiML::VoiceResponse.new
+            response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/remind", input: "speech", speech_timeout: "1") do |g|
+                g.say(voice: "woman", message: "Something went wrong, please try again")
+            end
+            response.say(voice: "woman", message: "Did not reach")
+            render xml: response.to_s
+        end
     end
 
-    def simple_xml
-        xml_response = <<-XML
-        <Response>
-            <Gather action="https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/collect_reminder" input="speech" speechTimeout="2">
-                <Say voice="woman">Go ahead and tell me what you would like to be reminded about.</Say>
-            </Gather>
-        </Response>
-        XML
-
-        render xml: xml_response
+    def phone_call_fallback
+        puts params
     end
 end
