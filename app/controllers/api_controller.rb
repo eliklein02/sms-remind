@@ -185,7 +185,7 @@ class ApiController < ApplicationController
             send_sms(from_number, "You did not provide a valid date/time. Please try again.")
             return
         end
-        job = u.schedule_reminder(formatted_time, subject, type)
+        job = u.schedule_reminder(formatted_time, subject, type, "sms")
     end
 
     def phone_call_callback
