@@ -26,13 +26,13 @@ class ApiController < ApplicationController
             return if job.nil?
             sender = User.find_by(phone_number: to_e164(from_number))
             job_user = User.find(job.user_id)
-            send_sms(from_number, "Nice try :)") and return if job_user.id != sender.id
+            send_sms(from_number, "Nice try") and return if job_user.id != sender.id
             job.destroy
             send_sms(from_number, "Reminder has been successfully cancelled.")
         when "word"
             word = body.split(" ")[1]
-            defiinition = get_definition(word)
-            send_sms(from_number, defiinition)
+            definition = get_definition(word)
+            send_sms(from_number, definition)
         else
             handle_else(from_number, body)
         end
@@ -151,8 +151,13 @@ class ApiController < ApplicationController
         uri = URI(url)
         response = Net::HTTP.get(uri)
         response = JSON.parse(response)
-        definition = response[0]["shortdef"]
-        return definition
+        full_definition = response[0]["shortdef"]
+        to_send = []
+        full_definition.each_with_index do |e, i|
+            to_send << "#{i+1}: #{e}"
+        end
+        to_send = to_send.join(". ")
+        return to_send
     end
 
     def do_something
