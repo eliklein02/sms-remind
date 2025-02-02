@@ -209,7 +209,7 @@ class ApiController < ApplicationController
             response = Twilio::TwiML::VoiceResponse.new
             response.pause(length: 1)
             response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/upgrade_or_reminder", num_digits: 1) do |g|
-                g.say(voice: "woman", message: "Welcome to remind. Press 1 if you would like to upgrade your account. Otherwise press 2.")
+                g.say(voice: "woman", message: "Welcome to remind. Press 1 if you would like to upgrade your account. Please keep in mind that setting reminders via a phone call will default to calling you, specify if you would like to be reminder via sms. Press 2 to set a reminder.")
             end
             response.say(voice: "woman", message: "Did not reach")
             render xml: response.to_s
@@ -217,7 +217,7 @@ class ApiController < ApplicationController
             response = Twilio::TwiML::VoiceResponse.new
             response.pause(length: 1)
             response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/upgrade_or_reminder", num_digits: 1) do |g|
-                g.say(voice: "woman", message: "Press 1 if you would like to upgrade your account. Otherwise press 2.")
+                g.say(voice: "woman", message: "Press 1 if you would like to upgrade your account. Press 2 to set a reminder.")
             end
             response.say(voice: "woman", message: "Did not reach")
             render xml: response.to_s
