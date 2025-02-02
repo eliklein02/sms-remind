@@ -21,6 +21,9 @@ class ApiController < ApplicationController
             send_sms(phone_number, "You are already registered with Remind.") and return if user.persisted?
             user.account_source ||= "sms"
             user.save if user.new_record?
+        when "upgrade"
+            phone_number = to_e164(params[:From])
+            send_sms(phone_number, "To upgrade your account, please call this number and dial 1.") and return
         when "finance"
             ai_parsed = ai_elimelech(body)
             send_sms(from_number, ai_parsed)
@@ -200,14 +203,25 @@ class ApiController < ApplicationController
         phone_number = to_e164(params[:From])
         user = User.find_or_initialize_by(phone_number: phone_number)
         user.account_source ||= "voice"
+        is_new_user = user.new_record?
         user.save if user.new_record?
-        response = Twilio::TwiML::VoiceResponse.new
-        response.pause(length: 1)
-        response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/upgrade_or_reminder", num_digits: 1) do |g|
-            g.say(voice: "woman", message: "Press 1 if you would like to upgrade your account. Otherwise press 2.")
+        if is_new_user
+            response = Twilio::TwiML::VoiceResponse.new
+            response.pause(length: 1)
+            response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/upgrade_or_reminder", num_digits: 1) do |g|
+                g.say(voice: "woman", message: "Welcome to remind. Press 1 if you would like to upgrade your account. Otherwise press 2.")
+            end
+            response.say(voice: "woman", message: "Did not reach")
+            render xml: response.to_s
+        else
+            response = Twilio::TwiML::VoiceResponse.new
+            response.pause(length: 1)
+            response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/upgrade_or_reminder", num_digits: 1) do |g|
+                g.say(voice: "woman", message: "Press 1 if you would like to upgrade your account. Otherwise press 2.")
+            end
+            response.say(voice: "woman", message: "Did not reach")
+            render xml: response.to_s
         end
-        response.say(voice: "woman", message: "Did not reach")
-        render xml: response.to_s
     end
 
     def upgrade_or_reminder

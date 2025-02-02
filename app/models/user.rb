@@ -77,7 +77,7 @@ class User < ApplicationRecord
             send_sms(self.phone_number, "Your reminder (#{subject}) has been set for #{time_parsed}. Reply 'Cancel #{x.id}' to cancel.")
             x
         when "voice"
-            if self.tier === "free" && self.account_source != "voice"
+            if self.tier === "free" && self.account_source != "voice" && reminder_source != "voice"
                 send_sms(self.phone_number, "You can not use voice reminders on the free tier. Reply UPGRADE to upgrade to the paid plan.")
             else
                 job = ReminderCallJob.set(wait_until: time_utc).perform_later(self.id, subject)
