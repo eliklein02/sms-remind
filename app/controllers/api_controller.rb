@@ -16,14 +16,12 @@ class ApiController < ApplicationController
         body_first_word = body_down.split(" ")[0]
         case body_first_word
         when "register", "signup"
-            phone_number = to_e164(params[:From])
-            user = User.find_or_initialize_by(phone_number: phone_number)
-            send_sms(phone_number, "You are already registered with Remind.") and return if user.persisted?
+            user = User.find_or_initialize_by(phone_number: from_number)
+            send_sms(from_number, "You are already registered with Remind.") and return if user.persisted?
             user.account_source ||= "sms"
             user.save if user.new_record?
         when "upgrade"
-            phone_number = to_e164(params[:From])
-            send_sms(phone_number, "To upgrade your account, please call this number and dial 1.") and return
+            send_sms(from_number, "To upgrade your account, please call this number and dial 1.") and return
         when "finance"
             ai_parsed = ai_elimelech(body)
             send_sms(from_number, ai_parsed)
@@ -36,6 +34,10 @@ class ApiController < ApplicationController
             send_sms(from_number, "Nice try") and return if job_user.id != sender.id
             job.destroy
             send_sms(from_number, "Reminder has been successfully cancelled.")
+        when "help"
+            send_sms(from_number, "To register, reply with 'register'. To upgrade your account, reply with 'upgrade'. To cancel a reminder, reply with 'cancel [reminder id]', to opt out, reply 'STOP'.")
+            send_sms(from_number, "You can also set reminders by calling this number and dialing 2.")
+            send_sms(from_number, "You will be reminded via sms by default, to be reminded via phone call, specify so in the reminder.") and return
         when "word"
             word = body.split(" ")[1]
             definition = get_definition(word)
