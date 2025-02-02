@@ -248,6 +248,10 @@ class ApiController < ApplicationController
             response.say(voice: "woman", message: "You will be reminded via voice by default, to be reminded via sms, specify so in the reminder.")
             response.pause(length: 0.75)
             render xml: response.to_s
+        else
+            response = Twilio::TwiML::VoiceResponse.new
+            response.say(voice: "woman", message: "That is not a valid option.")
+            render xml: response.to_s
         end
     end
 
