@@ -64,7 +64,7 @@ class User < ApplicationRecord
         users
     end
 
-    def schedule_reminder(time, subject, type, source)
+    def schedule_reminder(time, subject, type, reminder_source)
         time = Time.parse(time.to_s)
         time_est = time.in_time_zone('Eastern Time (US & Canada)')
         time_parsed = time.strftime("%A, %B %d, %Y, at %I:%M:%S %p")
@@ -77,15 +77,13 @@ class User < ApplicationRecord
             send_sms(self.phone_number, "Your reminder (#{subject}) has been set for #{time_parsed}. Reply 'Cancel #{x.id}' to cancel.")
             x
         when "voice"
-            if self.tier === "free" && source != "voice"
+            if self.tier === "free" && self.account_source != "voice"
                 send_sms(self.phone_number, "You can not use voice reminders on the free tier. Reply UPGRADE to upgrade to the paid plan.")
             else
                 job = ReminderCallJob.set(wait_until: time_utc).perform_later(self.id, subject)
                 x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
                 x = Delayed::Job.find_by(id: job.provider_job_id)
-                if source == "sms"
-                    puts "is sms"
-                    puts source
+                if reminder_source == "sms"
                     send_sms(self.phone_number, "Your call reminder (#{subject}) has been set for #{time_parsed}.  Reply 'Cancel #{x.id}' to cancel.")
                 end
                 x

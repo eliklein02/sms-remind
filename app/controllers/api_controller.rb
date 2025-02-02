@@ -16,7 +16,11 @@ class ApiController < ApplicationController
         body_first_word = body_down.split(" ")[0]
         case body_first_word
         when "register", "signup"
-            u = User.find_or_create_by(phone_number: to_e164(from_number))
+            phone_number = to_e164(params[:From])
+            user = User.find_or_initialize_by(phone_number: phone_number)
+            send_sms(phone_number, "You are already registered with Remind.") and return if user.persisted?
+            user.account_source ||= "sms"
+            user.save if user.new_record?
         when "finance"
             ai_parsed = ai_elimelech(body)
             send_sms(from_number, ai_parsed)
@@ -177,7 +181,6 @@ class ApiController < ApplicationController
     def handle_else(from_number, body)
         u = User.find_by(phone_number: to_e164(from_number))
         send_sms(from_number, "You are not registered to receive messages from Remind. Please reply with 'register' to sign up.") and return if u.nil?
-        send_sms(from_number, "You have not replied YES to the confirmation message. Please reply YES to continue.") and return if u.is_opted_in === false
         jobs_count = u.jobs_count
         send_sms(from_number, "Exceeded free tier limit of 3 active reminders. Reply UPGRADE to upgrade yout account") and return if jobs_count >= 3 && u.tier === "free"
         ai_parsed = ai_sms_parser(body)
@@ -195,8 +198,9 @@ class ApiController < ApplicationController
 
     def phone_call_callback
         phone_number = to_e164(params[:From])
-        user = User.find_or_create_by(phone_number: phone_number)
-        user.update(account_source: "voice")
+        user = User.find_or_initialize_by(phone_number: phone_number)
+        user.account_source ||= "voice"
+        user.save if user.new_record?
         response = Twilio::TwiML::VoiceResponse.new
         response.pause(length: 1)
         response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/upgrade_or_reminder", num_digits: 1) do |g|
@@ -241,7 +245,7 @@ class ApiController < ApplicationController
         job = u.schedule_reminder(formatted_time, subject, type, "voice")
         if job
             response = Twilio::TwiML::VoiceResponse.new
-            response.say(voice: "woman", message: "You said #{subject}, at #{time}")
+            response.say(voice: "woman", message: "You will be reminded to #{subject}, at #{time}")
             response.pause(length: 0.75)
             render xml: response.to_s
         else
