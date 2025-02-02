@@ -35,6 +35,7 @@ class ApiController < ApplicationController
             job.destroy
             send_sms(from_number, "Reminder has been successfully cancelled.")
         when "help"
+            send_sms(from_number, "Welcome to Remind. You can set reminders by replying with the time and subject of the reminder. For example, 'remind me in 5 minutes to call mom', or 'remind me on december 5 about David's wedding'.")
             send_sms(from_number, "To register, reply with 'register'. To upgrade your account, reply with 'upgrade'. To cancel a reminder, reply with 'cancel [reminder id]', to opt out, reply 'STOP'.")
             send_sms(from_number, "You can also set reminders by calling this number and dialing 2.")
             send_sms(from_number, "You will be reminded via sms by default, to be reminded via phone call, specify so in the reminder.") and return
@@ -211,7 +212,7 @@ class ApiController < ApplicationController
             response = Twilio::TwiML::VoiceResponse.new
             response.pause(length: 1)
             response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/upgrade_or_reminder", num_digits: 1) do |g|
-                g.say(voice: "woman", message: "Welcome to remind. Press 1 if you would like to upgrade your account. Please keep in mind that setting reminders via a phone call will default to calling you, specify if you would like to be reminder via sms. Press 2 to set a reminder.")
+                g.say(voice: "woman", message: "Welcome to remind. Press 1 if you would like to upgrade your account. Please keep in mind that setting reminders via a phone call will default to calling you, specify if you would like to be reminder via sms. Press 2 to set a reminder. Press 3 for instructions.")
             end
             response.say(voice: "woman", message: "Did not reach")
             render xml: response.to_s
@@ -219,7 +220,7 @@ class ApiController < ApplicationController
             response = Twilio::TwiML::VoiceResponse.new
             response.pause(length: 1)
             response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/upgrade_or_reminder", num_digits: 1) do |g|
-                g.say(voice: "woman", message: "Press 1 if you would like to upgrade your account. Press 2 to set a reminder.")
+                g.say(voice: "woman", message: "Press 1 if you would like to upgrade your account. Press 2 to set a reminder. Press 3 for instructions.")
             end
             response.say(voice: "woman", message: "Did not reach")
             render xml: response.to_s
@@ -233,12 +234,19 @@ class ApiController < ApplicationController
             response = Twilio::TwiML::VoiceResponse.new
             response.redirect('https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/upgrade')
             render xml: response.to_s
-        else
+        when "2"
             response = Twilio::TwiML::VoiceResponse.new
             response.gather(action: "https://3d1b-2600-4808-53f4-f00-8459-922d-92a3-c1e5.ngrok-free.app/remind", input: "speech", speech_timeout: "1") do |g|
                 g.say(voice: "woman", message: "Go ahead")
             end
             response.say(voice: "woman", message: "Did not reach")
+            render xml: response.to_s
+        when "3"
+            response = Twilio::TwiML::VoiceResponse.new
+            response.say(voice: "woman", message: "Welcome to Remind. You can set reminders by speaking the time and subject of the reminder. For example, 'remind me in 5 minutes to call mom', or 'remind me on december 5 about David's wedding'.")
+            response.pause(length: 0.50)
+            response.say(voice: "woman", message: "You will be reminded via voice by default, to be reminded via sms, specify so in the reminder.")
+            response.pause(length: 0.75)
             render xml: response.to_s
         end
     end
