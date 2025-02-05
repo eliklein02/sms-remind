@@ -10,6 +10,14 @@ class ViewsController < ApplicationController
         render json: { message: "App is running", time: Chronic.parse('now') }
     end
 
+    def dashboard
+        users = User.all
+        events = Event.all
+        respond_to do |f|
+            f.html { render :dashboard, locals: { users: users, events: events } }
+        end
+    end
+
     def delete_job
         job_id = params[:jobId]
         job = Delayed::Job.find(job_id)

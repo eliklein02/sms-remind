@@ -187,9 +187,11 @@ class ApiController < ApplicationController
     def handle_else(from_number, body)
         u = User.find_by(phone_number: to_e164(from_number))
         send_sms(from_number, "You are not registered to receive messages from Remind. Please reply with 'register' to sign up.") and return if u.nil?
-        jobs_count = u.jobs_count
-        send_sms(from_number, "Exceeded free tier limit of 3 active reminders. Reply UPGRADE to upgrade yout account") and return if jobs_count >= 3 && u.tier === "free"
-        ai_parsed = ai_sms_parser(body)
+        sms_jobs_count = u.sms_jobs_count
+        voice_jobs_count = u.voice_jobs_count
+        send_sms(from_number, "Exceeded free tier limit of 2 active sms reminders. Reply UPGRADE to upgrade yout account") and return if sms_jobs_count >= 2 && u.tier === "free"
+        send_sms(from_number, "Exceeded free tier limit of 1 active voice reminder. Reply UPGRADE to upgrade yout account") and return if voice_jobs_count >= 1 && u.tier === "free"
+        u.account_source == "voice" ? ai_parsed = ai_sms_parser_voice(body) : ai_parsed = ai_sms_parser(body)
         puts ai_parsed
         time = ai_parsed.split("#")[0]
         subject = ai_parsed.split("#")[1]
@@ -265,11 +267,27 @@ class ApiController < ApplicationController
     def remind
         result = params[:SpeechResult]
         u = User.find_by(phone_number: to_e164(params[:From]))
-        ai_parsed = ai_sms_parser_voice(result)
+        u.account_source == "voice" ? ai_parsed = ai_sms_parser_voice(result) : ai_parsed = ai_sms_parser(result)
         time = ai_parsed.split("#")[0]
         subject = ai_parsed.split("#")[1]
         type = ai_parsed.split("#")[2]
         formatted_time = Chronic.parse(time)
+
+        sms_jobs_count = u.sms_jobs_count
+        voice_jobs_count = u.voice_jobs_count
+
+        if sms_jobs_count >= 2 && u.tier == "free" && type == "sms"
+            response = Twilio::TwiML::VoiceResponse.new
+            response.say(voice: "woman", message: "Exceeded free tier limit of 2 active sms reminders. Reply UPGRADE to upgrade yout account")
+            response.pause(length: 0.75)
+            render xml: response.to_s and return
+        end
+        if voice_jobs_count >= 1 && u.tier == "free" && type == "voice"
+            response = Twilio::TwiML::VoiceResponse.new
+            response.say(voice: "woman", message: "Exceeded free tier limit of 1 active voice reminder. Reply UPGRADE to upgrade yout account")
+            response.pause(length: 0.75)
+            render xml: response.to_s and return
+        end
         job = u.schedule_reminder(formatted_time, subject, type, "voice")
         if job
             response = Twilio::TwiML::VoiceResponse.new

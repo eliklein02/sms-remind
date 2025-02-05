@@ -43,6 +43,8 @@ Rails.application.routes.draw do
 
   post "/remind" => "api#remind"
 
+  get "/dashboard" => "views#dashboard"
+
   # Defines the root path route ("/")
   # root "posts#index"
 end

@@ -1,0 +1,100 @@
+<style>
+    .bg-soft-blue {
+        background-color: #e3f2fd;
+    }
+    .bg-soft-green {
+        background-color: #e8f5e9;
+    }
+    .bg-soft-yellow {
+        background-color: #fffde7;
+    }
+    .text-soft-blue {
+        color: #1e88e5;
+    }
+    .text-soft-green {
+        color: #43a047;
+    }
+    .text-soft-yellow {
+        color: #fdd835;
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card bg-soft-blue">
+                <div class="card-header text-soft-blue">
+                    Users (<%= users.count %>)
+                </div>
+                <div class="card-body">
+                    <% users.each do |u| %>
+                        <p><%= u.phone_number %> (since <%= u.created_at.strftime("%B %d, %Y %I:%M %p") %>) </p>
+                    <% end %>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card bg-soft-green">
+                <div class="card-header text-soft-green">
+                    Latest Events (<%= events.count %>)
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <% events.reverse_each do |e| %>
+                            <p><%= e.user_phone_number %> - <%= e.reminder_type %> - <%= e.created_at.strftime("%B %d, %Y %I:%M %p") %></p>
+                        <% end %>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card bg-soft-yellow">
+                <div class="card-header text-soft-yellow">
+                    Active Reminders
+                </div>
+                <div class="card-body">
+                    <div style="height: 400px; background-color: #f1f8e9;">
+                        <% events.each do |e| %>
+                            <p><%= e.user_phone_number %> - <%= e.reminder_type %> - <%= e.run_at.to_datetime.strftime("%B %d, %Y %I:%M %p") if e.run_at.to_date - Time.now.to_i %></p>
+                        <% end %> 
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card bg-soft-blue">
+                <div class="card-header text-soft-blue">
+                    Notifications
+                </div>
+                <div class="card-body">
+                    <p class="text-soft-blue">No new notifications</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card bg-soft-yellow">
+            <div class="card-header text-soft-yellow">
+                Event Map
+            </div>
+            <div class="card-body">
+                <div id="map" style="height: 400px; background-color: #f1f8e9;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card bg-soft-yellow">
+                <div class="card-header text-soft-yellow">
+                    Event Map
+                </div>
+                <div class="card-body">
+                    <div id="map" style="height: 400px; background-color: #f1f8e9;"></div>
+                </div>
+            </div>
+        </div>
+    </div> -->
+</div>

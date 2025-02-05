@@ -40,8 +40,36 @@ class User < ApplicationRecord
         jobs
     end
 
-    def jobs_count
-        list_jobs.count
+    def list_sms_jobs
+        jobs = []
+        j = Delayed::Job.where(user_id: self.id)
+        j.each do |job|
+            job_data = YAML.safe_load(job.handler, permitted_classes: [ActiveJob::QueueAdapters::DelayedJobAdapter::JobWrapper])
+            if job_data.job_data["job_class"] == "ReminderJob"
+                jobs << job
+            end
+        end
+        jobs
+    end
+
+    def list_voice_jobs
+        jobs = []
+        j = Delayed::Job.where(user_id: self.id)
+        j.each do |job|
+            job_data = YAML.safe_load(job.handler, permitted_classes: [ActiveJob::QueueAdapters::DelayedJobAdapter::JobWrapper])
+            if job_data.job_data["job_class"] == "ReminderCallJob"
+                jobs << job
+            end
+        end
+        jobs
+    end
+
+    def sms_jobs_count
+        list_sms_jobs.count
+    end
+
+    def voice_jobs_count
+        list_voice_jobs.count
     end
 
     def notify_me(who)
@@ -74,22 +102,18 @@ class User < ApplicationRecord
             job = ReminderJob.set(wait_until: time_utc).perform_later(self.id, subject)
             x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
             x = Delayed::Job.find_by(id: job.provider_job_id)
+            event = Event.create(user_phone_number: self.phone_number, reminder_type: "SMS Reminder", run_at: time)
             send_sms(self.phone_number, "Your reminder (#{subject}) has been set for #{time_parsed}. Reply 'Cancel #{x.id}' to cancel.")
             x
         when "voice"
-            if self.tier === "free" && self.account_source != "voice" && reminder_source != "voice"
-                send_sms(self.phone_number, "You can not use voice reminders on the free tier. Reply UPGRADE to upgrade to the paid plan.")
-            else
-                job = ReminderCallJob.set(wait_until: time_utc).perform_later(self.id, subject)
-                x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
-                x = Delayed::Job.find_by(id: job.provider_job_id)
-                if reminder_source == "sms"
-                    send_sms(self.phone_number, "Your call reminder (#{subject}) has been set for #{time_parsed}.  Reply 'Cancel #{x.id}' to cancel.")
-                end
-                x
+            job = ReminderCallJob.set(wait_until: time_utc).perform_later(self.id, subject)
+            x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
+            x = Delayed::Job.find_by(id: job.provider_job_id)
+            if reminder_source == "sms"
+                send_sms(self.phone_number, "Your call reminder (#{subject}) has been set for #{time_parsed}.  Reply 'Cancel #{x.id}' to cancel.")
             end
-        else
-            return
+            event = Event.create(user_phone_number: self.phone_number, reminder_type: "Voice Reminder", run_at: time)
+            x
         end
     end
 

@@ -87,3 +87,5 @@ gem "jquery-rails", "~> 4.6"
 gem "rack-cors", "~> 2.0"
 
 gem 'bootstrap', '~> 5.1.3'
+
+gem "google-api-client", "~> 0.53.0"
