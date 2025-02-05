@@ -17,6 +17,10 @@
     .text-soft-yellow {
         color: #fdd835;
     }
+    .card-body {
+        height: 400px; /* Set a fixed height */
+        overflow-y: auto; /* Enable vertical scrolling */
+    }
 </style>
 
 <div class="container mt-5">
@@ -55,7 +59,7 @@
                 <div class="card-body">
                     <div style="height: 400px; background-color: #f1f8e9;">
                         <% events.each do |e| %>
-                            <p><%= e.user_phone_number %> - <%= e.reminder_type %> - <%= e.run_at.to_datetime.strftime("%B %d, %Y %I:%M %p") if e.run_at.to_date - Time.now.to_i %></p>
+                            <p><%= e.user_phone_number %> - <%= e.reminder_type %> - <%= e.run_at.to_datetime.strftime("%B %d, %Y %I:%M %p") if e.run_at.present? %></p>
                         <% end %> 
                     </div>
                 </div>
@@ -73,19 +77,6 @@
         </div>
     </div>
     <div class="row">
-    <div class="col-md-12 mb-4">
-        <div class="card bg-soft-yellow">
-            <div class="card-header text-soft-yellow">
-                Event Map
-            </div>
-            <div class="card-body">
-                <div id="map" style="height: 400px; background-color: #f1f8e9;"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-    <!-- <div class="row">
         <div class="col-md-12 mb-4">
             <div class="card bg-soft-yellow">
                 <div class="card-header text-soft-yellow">
@@ -96,5 +87,5 @@
                 </div>
             </div>
         </div>
-    </div> -->
+    </div>
 </div>
