@@ -2,6 +2,7 @@ class User < ApplicationRecord
     require 'chronic'
     require 'sendgrid-ruby'
     include SendGrid
+    include HelperTools
 
     after_create :to_e164, :sign_em_up
 
@@ -115,19 +116,5 @@ class User < ApplicationRecord
             event = Event.create(user_phone_number: self.phone_number, reminder_type: "Voice Reminder", run_at: time)
             x
         end
-    end
-
-    def send_sms(to, what)
-        what.strip!
-        account_sid = ENV['TWILIO_ACCOUNT_SID']
-        auth_token = ENV['TWILIO_AUTH_TOKEN']
-        twilio_phone_number = ENV['TWILIO_PHONE_NUMBER']
-        @client = Twilio::REST::Client.new(account_sid, auth_token)
-        message = @client.messages.create(
-            from: twilio_phone_number,
-            body: "Reminder: #{what}",
-            to: to
-        )
-        puts message
     end
 end

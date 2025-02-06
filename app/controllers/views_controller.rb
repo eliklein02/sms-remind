@@ -1,6 +1,8 @@
 class ViewsController < ApplicationController
     require 'chronic'
 
+    include HelperTools
+
     before_action :authorize_user, only: [ :user ]
 
     def index
@@ -13,8 +15,10 @@ class ViewsController < ApplicationController
     def dashboard
         users = User.all
         events = Event.all
+        events_by_day = Event.group("DATE(created_at)").count
+        users_by_day = User.group("DATE(created_at)").count
         respond_to do |f|
-            f.html { render :dashboard, locals: { users: users, events: events } }
+            f.html { render :dashboard, locals: { users: users, events: events, users_by_day: users_by_day, events_by_day: events_by_day } }
         end
     end
 
@@ -72,14 +76,6 @@ class ViewsController < ApplicationController
         end
     end
 
-    def to_e164(pn)
-        phone_number = pn
-        phone_number.gsub!(/[^0-9]/, "")
-        phone_number = "+1#{phone_number[0..2]}-#{phone_number[3..5]}-#{phone_number[6..9]}" if phone_number.length === 10
-        phone_number = "+1#{phone_number[1..3]}-#{phone_number[4..6]}-#{phone_number[7..10]}" if phone_number.length === 11
-        phone_number
-    end
-
     private
 
     def authorize_user
@@ -87,17 +83,5 @@ class ViewsController < ApplicationController
         unless session[:user_id] == @user.id
             redirect_to root_path
         end
-    end
-
-    def send_sms(to, what)
-        account_sid = ENV['TWILIO_ACCOUNT_SID']
-        auth_token = ENV['TWILIO_AUTH_TOKEN']
-        twilio_phone_number = ENV['TWILIO_PHONE_NUMBER']
-        @client = Twilio::REST::Client.new(account_sid, auth_token)
-        message = @client.messages.create(
-            from: twilio_phone_number,
-            body: what,
-            to: to
-        )
     end
 end

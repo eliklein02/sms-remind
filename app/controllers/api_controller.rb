@@ -5,6 +5,9 @@ class ApiController < ApplicationController
     require 'net/http'
 
 
+    include HelperTools
+
+
 
     skip_before_action :verify_authenticity_token
 
@@ -44,20 +47,22 @@ class ApiController < ApplicationController
             definition = get_definition(word)
             send_sms(from_number, definition)
         else
-            handle_else(from_number, body)
+            handle_reminder(from_number, body)
         end
         render json: { message: "All Good" }, status: :ok
     end
 
-    def ai_sms_parser(input)
-        now = Time.now
+    def ai_parser(input, account_source)
+        account_source == "voice" ? default = "voice" : default = "sms"
+        default == "voice" ? reverse = "sms" : reverse = "voice"
+        now = Time.current
         now = now.strftime("%Y-%m-%d (%A) %I:%M:%S %p, %Z")
         client = OpenAI::Client.new
         response = client.chat(
           parameters: {
             model: "gpt-4o",
             messages: [
-                { role: "user", content: "You are a natural language time parser. You will return the time and subject and type of reminder given to you by a human in the following format in eastern standar time: 'yyyy-mm-dd, hh:mm:ss (AM/PM)#subject of the reminder#type of reminder.
+                { role: "user", content: "You are a natural language time parser. You will return the time and subject and type of reminder given to you by a human in the following format in UTC: 'yyyy-mm-dd, hh:mm:ss (AM/PM), UTC#subject of the reminder#type of reminder.
                                         You will take the current time, and use the natural language time given to you by the user to return the time in the format I just mentioned.
                                         If no time is provided, and there is only a subject, you will return the time as one hour from now.
                                         You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something
@@ -66,53 +71,15 @@ class ApiController < ApplicationController
                                         You will return ONLY the time in the format I mentioned, and no more words.
                                         Seconds are also valid, they might say in a minute and 30 seconds, and you will return the current time plus 1 minute and 30 seconds and so forth for other time increments.
                                         You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
-                                        As for the third section, the type, by default you will return as 'sms' unless the user specifies you to call as the reminder type, (NOT IF THE SUBJECT INCLUDES A PHONE CALL AS WHAT THEY NEED TO BE REMINDED ABOUT) in which case you will return 'voice'.
+                                        As for the third section, the type, by default you will return as #{default}, unless the user specifies that the reminder type should be #{reverse}, which in that case you will return
+                                        #{reverse}, (NOT IF THE SUBJECT INCLUDES A PHONE CALL AS WHAT THEY NEED TO BE REMINDED ABOUT, YOU WILL UNDERSTAND THE DIFFERENCE).
                                         Here is the current time: #{now}
-                                        Here is the user's time: #{input}" }
+                                        Here is the user's input: #{input}" }
             ],
             temperature: 0.7
           }
         )
         response.dig("choices", 0, "message", "content")
-    end
-
-    def ai_sms_parser_voice(input)
-        now = Time.now
-        now = now.strftime("%Y-%m-%d (%A) %I:%M:%S %p, %Z")
-        client = OpenAI::Client.new
-        response = client.chat(
-          parameters: {
-            model: "gpt-4o",
-            messages: [
-                { role: "user", content: "You are a natural language time parser. You will return the time and subject and type of reminder given to you by a human in the following format in eastern standar time: 'yyyy-mm-dd, hh:mm:ss (AM/PM)#subject of the reminder#type of reminder.
-                                        You will take the current time, and use the natural language time given to you by the user to return the time in the format I just mentioned.
-                                        If no time is provided, and there is only a subject, you will return the time as one hour from now.
-                                        You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something
-                                        including 'tomorrow', or the like, you will return the date as the same day because that is what they mean.
-                                        Or another example, if the user says a specific time, you will return the next instance of that time on the clock, so if now is 1pm and they say 1 oclock that means 1am and so forth, unless of course specified otherwise.)
-                                        You will return ONLY the time in the format I mentioned, and no more words.
-                                        Seconds are also valid, they might say in a minute and 30 seconds, and you will return the current time plus 1 minute and 30 seconds and so forth for other time increments.
-                                        You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
-                                        As for the third section, the type, by default you will return as 'voice' unless the user specifies you to call as the reminder type, (NOT IF THE SUBJECT INCLUDES A PHONE CALL AS WHAT THEY NEED TO BE REMINDED ABOUT) in which case you will return 'sms'.
-                                        Here is the current time: #{now}
-                                        Here is the user's time: #{input}" }
-            ],
-            temperature: 0.7
-          }
-        )
-        response.dig("choices", 0, "message", "content")
-    end
-
-    def send_sms(to, what)
-        account_sid = ENV['TWILIO_ACCOUNT_SID']
-        auth_token = ENV['TWILIO_AUTH_TOKEN']
-        twilio_phone_number = ENV['TWILIO_PHONE_NUMBER']
-        @client = Twilio::REST::Client.new(account_sid, auth_token)
-        message = @client.messages.create(
-            from: twilio_phone_number,
-            body: what,
-            to: to
-        )
     end
 
     def ai_elimelech(input)
@@ -129,31 +96,6 @@ class ApiController < ApplicationController
           }
         )
         response.dig("choices", 0, "message", "content")
-    end
-
-    def test_json
-        now = Time.now
-        now = now.strftime("%Y-%m-%d (%A) %I:%M:%S %p")
-        puts now
-        client = OpenAI::Client.new
-        response = client.chat(
-          parameters: {
-            model: "gpt-4o",
-            messages: [
-              { role: "user", content: "You are a natural language time parser. You will return the time given to you by a human in the followinf format: yyyy-mm-dd, hh:mm:ss (AM/PM).
-                                        You will take the current time, and use the natural language time given to you by the user to return the time in the format I just mentioned.
-                                        You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something 
-                                        includig 'tomorrow', or the like, you will return the same day because that is what they mean). You will return ONLY the time in the format I mentioned,
-                                        and no more words, only in parentheses, you will return the logic of how you came to that conclusion in 8 words or less.
-                                        Here is the current time: #{now}
-                                        Here is the user's time: in one month and 2 days at 4:30pm" 
-                                        }
-            ],
-            temperature: 0.7
-          }
-        )
-        render json: { message: response.dig("choices", 0, "message", "content"), message2: "All good" }
-        # render json: { message: "Success" }
     end
 
     def get_definition(word)
@@ -177,31 +119,21 @@ class ApiController < ApplicationController
         end
     end
 
-    def to_e164(phone_number)
-        phone_number.gsub!(/[^0-9]/, '')
-        phone_number = "+1#{phone_number[0..2]}-#{phone_number[3..5]}-#{phone_number[6..9]}" if phone_number.length === 10
-        phone_number = "+1#{phone_number[1..3]}-#{phone_number[4..6]}-#{phone_number[7..10]}" if phone_number.length === 11
-        phone_number
-    end
-
-    def handle_else(from_number, body)
-        u = User.find_by(phone_number: to_e164(from_number))
-        send_sms(from_number, "You are not registered to receive messages from Remind. Please reply with 'register' to sign up.") and return if u.nil?
-        sms_jobs_count = u.sms_jobs_count
-        voice_jobs_count = u.voice_jobs_count
-        send_sms(from_number, "Exceeded free tier limit of 2 active sms reminders. Reply UPGRADE to upgrade yout account") and return if sms_jobs_count >= 2 && u.tier === "free"
-        send_sms(from_number, "Exceeded free tier limit of 1 active voice reminder. Reply UPGRADE to upgrade yout account") and return if voice_jobs_count >= 1 && u.tier === "free"
-        u.account_source == "voice" ? ai_parsed = ai_sms_parser_voice(body) : ai_parsed = ai_sms_parser(body)
+    def handle_reminder(from_number, body)
+        u = validate_user(from_number)
+        return if u.nil?
+        u.account_source == "voice" ? ai_parsed = ai_parser(body, "voice") : ai_parsed = ai_parser(body, "sms")
         puts ai_parsed
         time = ai_parsed.split("#")[0]
         subject = ai_parsed.split("#")[1]
         type = ai_parsed.split("#")[2]
-        formatted_time = Chronic.parse(time)
-        if formatted_time.nil? || formatted_time === ""
-            send_sms(from_number, "You did not provide a valid date/time. Please try again.")
-            return
-        end
-        job = u.schedule_reminder(formatted_time, subject, type, "sms")
+        job_scheduler = ReminderSchedulerService.new(u, type, subject, time, "sms").schedule_reminder
+    end
+
+    def validate_user(phone_number)
+        u = User.find_by(phone_number: to_e164(phone_number))
+        send_sms(from_number, "You are not registered to receive messages from Remind. Please reply with 'register' to sign up.") and return if u.nil?
+        u
     end
 
     def phone_call_callback
@@ -265,9 +197,9 @@ class ApiController < ApplicationController
     end
 
     def remind
-        result = params[:SpeechResult]
+        body = params[:SpeechResult]
         u = User.find_by(phone_number: to_e164(params[:From]))
-        u.account_source == "voice" ? ai_parsed = ai_sms_parser_voice(result) : ai_parsed = ai_sms_parser(result)
+        u.account_source == "voice" ? ai_parsed = ai_parser(body, "voice") : ai_parsed = ai_parser(body, "sms")
         time = ai_parsed.split("#")[0]
         subject = ai_parsed.split("#")[1]
         type = ai_parsed.split("#")[2]
@@ -288,8 +220,8 @@ class ApiController < ApplicationController
             response.pause(length: 0.75)
             render xml: response.to_s and return
         end
-        job = u.schedule_reminder(formatted_time, subject, type, "voice")
-        if job
+        job_scheduler = ReminderSchedulerService.new(u, type, subject, time, "voice").schedule_reminder
+        if job_scheduler
             response = Twilio::TwiML::VoiceResponse.new
             response.say(voice: "woman", message: "You will be reminded to #{subject}, at #{time}")
             response.pause(length: 0.75)

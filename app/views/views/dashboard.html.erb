@@ -23,12 +23,44 @@
     }
 </style>
 
+
+
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-6 mb-4">
             <div class="card bg-soft-blue">
                 <div class="card-header text-soft-blue">
-                    Users (<%= users.count %>)
+                    User's account source (<%= users.count %>)
+                </div>
+                <div class="card-body">
+                    <%= pie_chart User.group(:account_source).count, colors: ["#b00", "#666"] %>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card bg-soft-blue">
+                <div class="card-header text-soft-blue">
+                    Users sign up rate
+                </div>
+                <div class="card-body">
+                    <%= line_chart events.group_by_day(:created_at, range: 1.week.ago..Date.current).count %>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card bg-soft-blue">
+                <div class="card-header text-soft-blue">
+                    Events rate
+                </div>
+                <div class="card-body">
+                    <%= column_chart events.group_by_day(:created_at, range: 1.week.ago..Date.current).count %>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card bg-soft-blue">
+                <div class="card-header text-soft-blue">
+                    Users list (<%= users.count %>)
                 </div>
                 <div class="card-body">
                     <% users.each do |u| %>
@@ -59,7 +91,9 @@
                 <div class="card-body">
                     <div style="height: 400px; background-color: #f1f8e9;">
                         <% events.each do |e| %>
-                            <p><%= e.user_phone_number %> - <%= e.reminder_type %> - <%= e.run_at.to_datetime.strftime("%B %d, %Y %I:%M %p") if e.run_at.present? %></p>
+                            <%  if e.run_at.to_datetime > Time.current %>
+                                <p><%= e.user_phone_number %> - <%= e.reminder_type %> - <%= e.run_at.to_datetime.in_time_zone('Eastern Time (US & Canada)').strftime("%B %d, %Y %I:%M %p") if e.run_at.present? %></p>
+                            <% end %> 
                         <% end %> 
                     </div>
                 </div>

@@ -89,3 +89,7 @@ gem "rack-cors", "~> 2.0"
 gem 'bootstrap', '~> 5.1.3'
 
 # gem "google-api-client", "~> 0.53.0"
+
+gem "chartkick", "~> 5.1"
+
+gem "groupdate", "~> 6.5"
