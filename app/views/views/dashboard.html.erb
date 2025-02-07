@@ -27,6 +27,14 @@
 
 <div class="container mt-5">
     <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card bg-soft-green">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center" style="height: 200px;">
+                    <h1 class="display-1 text-soft-green"><%= users.count %></h1>
+                    <p class="h4 text-soft-green">Active Users</p>
+                </div>
+            </div>
+        </div>
         <div class="col-md-6 mb-4">
             <div class="card bg-soft-blue">
                 <div class="card-header text-soft-blue">
@@ -64,7 +72,7 @@
                 </div>
                 <div class="card-body">
                     <% users.each do |u| %>
-                        <p><%= u.phone_number %> (since <%= u.created_at.strftime("%B %d, %Y %I:%M %p") %>) </p>
+                        <p><%= u.phone_number %> (since <%= u.created_at.in_time_zone('Eastern Time (US & Canada)').strftime("%B %d, %Y %I:%M %p") %>) </p>
                     <% end %>
                 </div>
             </div>
@@ -77,7 +85,7 @@
                 <div class="card-body">
                     <ul class="list-group">
                         <% events.reverse_each do |e| %>
-                            <p><%= e.user_phone_number %> - <%= e.reminder_type %> - <%= e.created_at.strftime("%B %d, %Y %I:%M %p") %></p>
+                            <p><%= e.user_phone_number %> - <%= e.reminder_type %> - <%= e.created_at.in_time_zone('Eastern Time (US & Canada)').strftime("%B %d, %Y %I:%M %p") %></p>
                         <% end %>
                     </ul>
                 </div>
@@ -92,7 +100,7 @@
                     <div style="height: 400px; background-color: #f1f8e9;">
                         <% events.each do |e| %>
                             <%  if e.run_at.to_datetime > Time.current %>
-                                <p><%= e.user_phone_number %> - <%= e.reminder_type %> - <%= e.run_at.to_datetime.in_time_zone('Eastern Time (US & Canada)').strftime("%B %d, %Y %I:%M %p") if e.run_at.present? %></p>
+                                <p><%= e.user_phone_number %> - <%= e.reminder_type %> - <%= e.run_at.to_datetime.in_time_zone('Eastern Time (US & Canada)').in_time_zone('Eastern Time (US & Canada)').strftime("%B %d, %Y %I:%M %p") if e.run_at.present? %></p>
                             <% end %> 
                         <% end %> 
                     </div>
