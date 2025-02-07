@@ -53,31 +53,76 @@ class ApiController < ApplicationController
         render json: { message: "All Good" }, status: :ok
     end
 
-    def ai_parser(input, account_source)
+    def ai_parser(input, account_source, user_id)
         account_source == "voice" ? default = "voice" : default = "sms"
         default == "voice" ? reverse = "sms" : reverse = "voice"
-        now = Time.current
-        puts now
+        now = Time.now.utc
         now = now.strftime("%Y-%m-%d (%A) %I:%M:%S %p, %Z")
-        puts now
+        User.find(user_id).time_zone.present? ? time_zone = User.find(user_id).time_zone : time_zone = "Eastern Time (US & Canada)"
         client = OpenAI::Client.new
         response = client.chat(
           parameters: {
             model: "gpt-4o",
             messages: [
-                { role: "user", content: "You are a natural language time parser. You will return the time and subject and type of reminder given to you by a human in the following format in UTC: 'yyyy-mm-dd, hh:mm:ss (AM/PM), UTC#subject of the reminder#type of reminder.
-                                        You will take the current time, and use the natural language time given to you by the user to return the time in the format I just mentioned.
-                                        If no time is provided, and there is only a subject, you will return the time as one hour from now.
-                                        You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something
-                                        including 'tomorrow', or the like, you will return the date as the same day because that is what they mean.
-                                        Or another example, if the user says a specific time, you will return the next instance of that time on the clock, so if now is 1pm and they say 1 oclock that means 1am and so forth, unless of course specified otherwise.)
-                                        You will return ONLY the time in the format I mentioned, and no more words.
-                                        Seconds are also valid, they might say in a minute and 30 seconds, and you will return the current time plus 1 minute and 30 seconds and so forth for other time increments.
-                                        You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
-                                        As for the third section, the type, by default you will return as #{default}, unless the user specifies that the reminder type should be #{reverse}, which in that case you will return
-                                        #{reverse}, (NOT IF THE SUBJECT INCLUDES A PHONE CALL AS WHAT THEY NEED TO BE REMINDED ABOUT, YOU WILL UNDERSTAND THE DIFFERENCE).
-                                        Here is the current time: #{now}
-                                        Here is the user's input: #{input}" }
+                { role: "user", content: 
+                                        # "You are a natural language time parser. You will return the time and subject and type of reminder given to you by a human in the following format in UTC: 'yyyy-mm-dd, hh:mm:ss (AM/PM), UTC#subject of the reminder#type of reminder#logic you used to get the timing and time zones and hours correct, including details like hours and time zone differneces and why you returned the given hour.
+                                        # You will take the current time, and I will provide the time zone that the message is coming from, and use the natural language time given to you by the user to return the time in the format I just mentioned, taking into consideration the time zone differences.
+                                        # If no time is provided, and there is only a subject, you will return the time as one hour from now.
+                                        # You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something
+                                        # including 'tomorrow', or the like, you will return the date as the same day because that is what they mean.
+                                        # Or another example, if the user says a specific time, you will return the next instance of that time on the clock, so if now is 1pm and they say 1 oclock that means 1am and so forth, unless of course specified otherwise.)
+                                        # You will return ONLY the time in the format I mentioned, and no more words.
+                                        # Seconds are also valid, they might say in a minute and 30 seconds, and you will return the current time plus 1 minute and 30 seconds and so forth for other time increments.
+                                        # You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
+                                        # As for the third section, the type, by default you will return as #{default}, unless the user specifies that the reminder type should be #{reverse}, which in that case you will return
+                                        # #{reverse}, (NOT IF THE SUBJECT INCLUDES A PHONE CALL AS WHAT THEY NEED TO BE REMINDED ABOUT, YOU WILL UNDERSTAND THE DIFFERENCE).
+                                        # Here is the user's time zone: #{time_zone}
+                                        # Here is the current time: #{now}
+                                        # Here is the user's input: #{input}" 
+                                         "You are a natural language time parser. Return the time, subject, and type of reminder given by a human in the following format in UTC:
+                                         yyyy-mm-dd, hh:mm:ss AM/PM UTC#subject of the reminder#type of reminder
+                                         here is the user's input: #{input}
+                                            Rules:
+                                                1.	Use UTC as the Primary Time Reference:
+
+                                                •	The current UTC time is: #{now}.
+                                                •	The user’s time zone is: #{time_zone}.
+                                                •	Always start from the UTC time provided and apply time zone offsets to determine the local time.
+                                                •	Ensure that AM/PM transitions are correctly handled when converting back to UTC.
+
+                                                2.	Basic Logic for Parsing Time:
+                                                •   If the user uses the term morning, that means 9 am
+                                                •	If no time is provided, return the time as one hour from now.
+                                                •	If the user provides a time without AM/PM, assume the next logical occurrence (e.g., if it’s 1 PM and they say “4 o’clock,” assume 4 PM).
+                                                •	If multiple times are mentioned, use the earliest one unless the user specifies otherwise.
+
+                                                3.	Handling Time Phrases:
+
+                                                •	‘Midnight’ = 00:00, ‘Noon’ = 12:00 PM.
+                                                •	‘Now’ = Round up to the next full minute in UTC time.
+                                                •	‘A few hours’ = 3 hours, ‘Later today’ = 6-8 hours.
+                                                •	‘End of the day’ = 11:59 PM, ‘Beginning of the day’ = 6 AM.
+
+                                                4.	Weekdays and Recurring Reminders:
+
+                                                •	‘Next [day of the week]’ = The next instance of that day unless today is that day and the time has not yet passed.
+                                                •	If a recurring reminder is requested (e.g., ‘every day at 8 AM’), indicate recurrence in the response.
+
+                                                5.	Time Zone Handling and DST Consideration:
+
+                                                •	Always apply the correct UTC offset for the given time zone and current date.
+                                                •	Consider Daylight Saving Time (DST) adjustments when necessary.
+                                                •	Never manually convert local time back to UTC—calculate everything directly from UTC first.
+
+                                                6.	Reminder Type:
+
+                                                •	Default type: #{default}.
+                                                •	If the user specifies the other type (#{reverse}), use it unless the subject involves a phone call.
+
+                                            Final Requirement:
+
+                                            Return ONLY the formatted time, subject, and type. Correct any spelling errors in the subject, but do not add extra words."
+                                    }
             ],
             temperature: 0.7
           }
@@ -125,7 +170,7 @@ class ApiController < ApplicationController
     def handle_reminder(from_number, body)
         u = validate_user(from_number)
         return if u.nil?
-        u.account_source == "voice" ? ai_parsed = ai_parser(body, "voice") : ai_parsed = ai_parser(body, "sms")
+        u.account_source == "voice" ? ai_parsed = ai_parser(body, "voice", u.id) : ai_parsed = ai_parser(body, "sms", u.id)
         puts ai_parsed
         time = ai_parsed.split("#")[0]
         subject = ai_parsed.split("#")[1]
@@ -202,7 +247,7 @@ class ApiController < ApplicationController
     def remind
         body = params[:SpeechResult]
         u = User.find_by(phone_number: to_e164(params[:From]))
-        u.account_source == "voice" ? ai_parsed = ai_parser(body, "voice") : ai_parsed = ai_parser(body, "sms")
+        u.account_source == "voice" ? ai_parsed = ai_parser(body, "voice", u.id) : ai_parsed = ai_parser(body, "sms", u.id)
         time = ai_parsed.split("#")[0]
         subject = ai_parsed.split("#")[1]
         type = ai_parsed.split("#")[2]

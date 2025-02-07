@@ -22,8 +22,8 @@ class ReminderSchedulerService
         # subject = ai_parsed.split("#")[1]
         # type = ai_parsed.split("#")[2]
 
-        time = Time.strptime(@time, "%Y-%m-%d, %I:%M:%S %p, %Z")
-        time_parsed = time.in_time_zone('Eastern Time (US & Canada)').strftime("%A, %B %d, %Y, at %I:%M:%S %p")
+        time = Time.strptime(@time, "%Y-%m-%d, %I:%M:%S %p %Z")
+        time_parsed = time.in_time_zone('Eastern Time (US & Canada)').strftime("%A, %B %d, %Y, at %I:%M %p")
 
 
         if time_parsed.nil? || time_parsed === ""

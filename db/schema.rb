@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_02_07_175633) do
+ActiveRecord::Schema[7.2].define(version: 2025_02_07_191623) do
   create_table "delayed_jobs", force: :cascade do |t|
     t.integer "priority", default: 0, null: false
     t.integer "attempts", default: 0, null: false
@@ -45,5 +45,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_07_175633) do
     t.integer "tier", default: 0
     t.string "tmp_otp"
     t.string "account_source"
+    t.string "time_zone"
   end
 end

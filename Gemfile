@@ -93,3 +93,5 @@ gem 'bootstrap', '~> 5.1.3'
 gem "chartkick", "~> 5.1"
 
 gem "groupdate", "~> 6.5"
+
+gem "tzip", "~> 0.0.4"
