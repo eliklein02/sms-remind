@@ -54,7 +54,7 @@
                     Users sign up rate
                 </div>
                 <div class="card-body">
-                    <%= line_chart users.group_by_day(:created_at, range: 1.month.ago..Date.current).count %>
+                    <%= line_chart users.group_by_day(:created_at, range: 1.month.ago..Date.today).count %>
                 </div>
             </div>
         </div>
@@ -64,7 +64,7 @@
                     Events rate
                 </div>
                 <div class="card-body">
-                    <%= column_chart events.group_by_day(:created_at, range: 1.week.ago..Date.current).count %>
+                    <%= column_chart events.group_by_day(:created_at, range: 1.week.ago..Date.today).count %>
                 </div>
             </div>
         </div>
