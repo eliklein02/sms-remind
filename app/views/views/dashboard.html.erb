@@ -8,6 +8,12 @@
     .bg-soft-yellow {
         background-color: #fffde7;
     }
+    .bg-soft-gray {
+        background-color: #f5f5f5;
+    }
+    .bg-soft-purple {
+        background-color: #f3e5f5;
+    }
     .bg-soft-red {
         background-color: #ffebee;
     }
@@ -38,7 +44,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-4">
+        <div class="col-md-4 mb-4">
             <div class="card bg-soft-blue">
                 <div class="card-header text-soft-blue">
                     User's account source (<%= users.count %>)
@@ -48,7 +54,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-4">
+        <div class="col-md-4 mb-4">
             <div class="card bg-soft-yellow">
                 <div class="card-header text-soft-blue">
                     Users sign up rate
@@ -58,8 +64,8 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-4">
-            <div class="card bg-soft-red">
+        <div class="col-md-4 mb-4">
+            <div class="card bg-soft-gray">
                 <div class="card-header text-soft-blue">
                     Events rate
                 </div>
@@ -68,7 +74,20 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-4">
+        <div class="col-md-4 mb-4">
+            <div class="card bg-soft-red">
+                <div class="card-header text-soft-blue d-flex flex-row">
+                    Voice/SMS Reminders
+                </div>
+                <div class="card-body">
+                    <% jobs = Delayed::Job.all %>
+                    <% jobs = jobs.map { |job| YAML.safe_load(job.handler, permitted_classes: [ActiveJob::QueueAdapters::DelayedJobAdapter::JobWrapper]).job_data["job_class"] == "ReminderCallJob" ? "Voice Reminder" : "SMS Reminder"}  %>
+                    <% jobs_count = jobs.each_with_object(Hash.new(0)) { |job, count| count[job] +=1 }  %>
+                    <%= pie_chart jobs_count, colors: ["#b00", "#666"], id: "remindersPieChart" %>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
             <div class="card bg-soft-green">
                 <div class="card-header text-soft-blue">
                     Users list (<%= users.count %>)
@@ -80,7 +99,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-4">
+        <div class="col-md-4 mb-4">
             <div class="card bg-soft-green">
                 <div class="card-header text-soft-green">
                     Latest Events (<%= events.count %>)
@@ -88,13 +107,13 @@
                 <div class="card-body">
                     <ul class="list-group">
                         <% events.reverse_each do |e| %>
-                            <p><%= e.user_phone_number %> - <%= e.reminder_type %> - <%= e.created_at.in_time_zone('Eastern Time (US & Canada)').strftime("%B %d, %Y %I:%M %p") %></p>
+                            <p><%= e.user_phone_number %> - <%= e.event_type %> - <%= e.created_at.in_time_zone('Eastern Time (US & Canada)').strftime("%B %d, %Y %I:%M %p") %></p>
                         <% end %>
                     </ul>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-4">
+        <div class="col-md-4 mb-4">
             <div class="card bg-soft-yellow">
                 <div class="card-header text-soft-yellow">
                     Active Reminders
@@ -102,15 +121,15 @@
                 <div class="card-body">
                     <div style="height: 400px; background-color: #f1f8e9;">
                         <% events.each do |e| %>
-                            <%  if e.run_at.to_datetime > Time.current %>
-                                <p><%= e.user_phone_number %> - <%= e.reminder_type %> - <%= e.run_at.to_datetime.in_time_zone('Eastern Time (US & Canada)').in_time_zone('Eastern Time (US & Canada)').strftime("%B %d, %Y %I:%M %p") if e.run_at.present? %></p>
+                            <%  if  e.run_at.present? && e.run_at.to_datetime > Time.current %>
+                                <p><%= e.user_phone_number %> - <%= e.event_type %> - <%= e.run_at.to_datetime.in_time_zone('Eastern Time (US & Canada)').in_time_zone('Eastern Time (US & Canada)').strftime("%B %d, %Y %I:%M %p") if e.run_at.present? %></p>
                             <% end %> 
                         <% end %> 
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-4">
+        <div class="col-md-4 mb-4">
             <div class="card bg-soft-blue">
                 <div class="card-header text-soft-blue">
                     Notifications

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_02_03_232632) do
+ActiveRecord::Schema[7.2].define(version: 2025_02_07_175633) do
   create_table "delayed_jobs", force: :cascade do |t|
     t.integer "priority", default: 0, null: false
     t.integer "attempts", default: 0, null: false
@@ -31,7 +31,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_02_03_232632) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "user_phone_number"
-    t.string "reminder_type"
+    t.string "event_type"
     t.string "location"
     t.string "run_at"
   end

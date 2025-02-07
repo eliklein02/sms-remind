@@ -46,6 +46,7 @@ class ApiController < ApplicationController
             word = body.split(" ")[1]
             definition = get_definition(word)
             send_sms(from_number, definition)
+            Event.create(user_phone_number: from_number, event_type: "Dictionary Query")
         else
             handle_reminder(from_number, body)
         end
@@ -56,7 +57,9 @@ class ApiController < ApplicationController
         account_source == "voice" ? default = "voice" : default = "sms"
         default == "voice" ? reverse = "sms" : reverse = "voice"
         now = Time.current
+        puts now
         now = now.strftime("%Y-%m-%d (%A) %I:%M:%S %p, %Z")
+        puts now
         client = OpenAI::Client.new
         response = client.chat(
           parameters: {

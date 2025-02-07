@@ -103,7 +103,7 @@ class User < ApplicationRecord
             job = ReminderJob.set(wait_until: time_utc).perform_later(self.id, subject)
             x = Delayed::Job.find_by(id: job.provider_job_id)&.update!(user_id: self.id)
             x = Delayed::Job.find_by(id: job.provider_job_id)
-            event = Event.create(user_phone_number: self.phone_number, reminder_type: "SMS Reminder", run_at: time)
+            event = Event.create(user_phone_number: self.phone_number, event_type: "SMS Reminder", run_at: time)
             send_sms(self.phone_number, "Your reminder (#{subject}) has been set for #{time_parsed}. Reply 'Cancel #{x.id}' to cancel.")
             x
         when "voice"
@@ -113,7 +113,7 @@ class User < ApplicationRecord
             if reminder_source == "sms"
                 send_sms(self.phone_number, "Your call reminder (#{subject}) has been set for #{time_parsed}.  Reply 'Cancel #{x.id}' to cancel.")
             end
-            event = Event.create(user_phone_number: self.phone_number, reminder_type: "Voice Reminder", run_at: time)
+            event = Event.create(user_phone_number: self.phone_number, event_type: "Voice Reminder", run_at: time)
             x
         end
     end
