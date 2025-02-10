@@ -73,7 +73,7 @@ gem "twilio-ruby", "~> 7.4"
 gem "chronic", "~> 0.10.2"
 
 
-gem "ruby-openai", "~> 7.3"
+gem "ruby-openai", "~> 7.4"
 
 gem "delayed_job_active_record", "~> 4.1"
 
