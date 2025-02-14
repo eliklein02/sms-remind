@@ -45,6 +45,10 @@ Rails.application.routes.draw do
 
   get "/dashboard" => "views#dashboard"
 
+  post "collect_cc_info_endpoint" => "api#collect_cc_info_endpoint"
+
+  post "chat_gpt" => "api#chat_gpt"
+
   # Defines the root path route ("/")
   # root "posts#index"
 end

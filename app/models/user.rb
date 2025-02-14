@@ -95,7 +95,7 @@ class User < ApplicationRecord
 
     def schedule_reminder(time, subject, type, reminder_source)
         time = Time.parse(time.to_s)
-        time_est = time.in_time_zone('Eastern Time (US & Canada)')
+        local_time = time.in_time_zone(u.time_zone || 'Eastern Time (US & Canada)')
         time_parsed = time.strftime("%A, %B %d, %Y, at %I:%M:%S %p")
         time_utc = time_est.utc
         case type

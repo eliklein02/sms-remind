@@ -194,7 +194,7 @@ class ApiController < ApplicationController
             response = Twilio::TwiML::VoiceResponse.new
             response.pause(length: 1)
             response.gather(action: "#{ENV['BASE_URL']}/upgrade_or_reminder", num_digits: 1) do |g|
-                g.say(voice: "woman", message: "Welcome to remind. Press 1 if you would like to upgrade your account. Please keep in mind that setting reminders via a phone call will default to calling you, specify if you would like to be reminder via sms. Press 2 to set a reminder. Press 3 for instructions.")
+                g.say(voice: "woman", message: "Welcome to remind. Press 1 if you would like to upgrade your account. Please keep in mind that setting reminders via a phone call will default to calling you, specify if you would like to be reminded via sms. Press 2 to set a reminder. Press 3 for instructions.")
             end
             response.say(voice: "woman", message: "Did not reach")
             render xml: response.to_s
@@ -218,7 +218,7 @@ class ApiController < ApplicationController
             render xml: response.to_s
         when "2"
             response = Twilio::TwiML::VoiceResponse.new
-            response.gather(action: "#{ENV['BASE_URL']}/remind", input: "speech", speech_timeout: "1") do |g|
+            response.gather(action: "#{ENV['BASE_URL']}/remind", input: "speech", speech_timeout: "2") do |g|
                 g.say(voice: "woman", message: "Go ahead")
             end
             response.say(voice: "woman", message: "Did not reach")
@@ -239,8 +239,15 @@ class ApiController < ApplicationController
 
     def upgrade
         response = Twilio::TwiML::VoiceResponse.new
-        response.say(voice: "woman", message: "Upgrading via phone line is not currently available. Neither is is available anywhere else.")
-        response.pause(length: 0.75)
+        response.gather(action: "#{ENV['BASE_URL']}/collect_cc_info_endpoint", input: "dtmf", num_digits: 16) do |g|
+            g.say(voice: "woman", message: "Please enter your credit card number")
+        end
+        render xml: response.to_s
+    end
+
+    def collect_cc_info_endpoint
+        response = Twilio::TwiML::VoiceResponse.new
+        response.say(voice: "woman", message: params[:Digits])
         render xml: response.to_s
     end
 
@@ -286,5 +293,20 @@ class ApiController < ApplicationController
 
     def phone_call_fallback
         puts params
+    end
+
+    def chat_gpt
+        input = params[:body]
+        client = OpenAI::Client.new
+        response = client.chat(
+          parameters: {
+            model: "gpt-4o",
+            messages: [
+                { role: "user", content: "You will answer the following question in 30 words or less: #{input}" }
+            ],
+            temperature: 0.7
+          }
+        )
+        render json: { message: response.dig("choices", 0, "message", "content") }
     end
 end
