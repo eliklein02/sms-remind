@@ -2,7 +2,7 @@
 ARG RUBY_VERSION=3.3.5
 FROM ruby:$RUBY_VERSION
 
-ENV TERM=dumb
+RUN TERM=dumb
 
 # Install libvips for Active Storage preview support
 RUN DEBIAN_FRONTEND=noninteractive \
