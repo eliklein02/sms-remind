@@ -5,7 +5,8 @@ FROM ruby:$RUBY_VERSION
 RUN TERM=dumb
 
 # Install libvips for Active Storage preview support
-RUN DEBIAN_FRONTEND=noninteractive \
+RUN RUN echo 'DPkg::Options {"--force-confnew"; "--force-confdef";};' > /etc/apt/apt.conf.d/local \
+    DEBIAN_FRONTEND=noninteractive \
     apt-get update -qq && \
     apt-get install -y --allow-downgrades build-essential libvips bash bash-completion libffi-dev tzdata postgresql nodejs npm ca-certificates apt-utils && \
     npm config set strict-ssl false && \
