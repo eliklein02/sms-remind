@@ -2,10 +2,12 @@
 ARG RUBY_VERSION=3.3.5
 FROM ruby:$RUBY_VERSION
 
+ENV TERM=dumb
+
 # Install libvips for Active Storage preview support
 RUN DEBIAN_FRONTEND=noninteractive \
     apt-get update -qq && \
-    apt-get install -y --force-yes build-essential libvips bash bash-completion libffi-dev tzdata postgresql nodejs npm ca-certificates && \
+    apt-get install -y --allow-downgrades build-essential libvips bash bash-completion libffi-dev tzdata postgresql nodejs npm ca-certificates apt-utils && \
     npm config set strict-ssl false && \
     npm install -g yarn && \
     apt-get clean && \
