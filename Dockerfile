@@ -4,7 +4,6 @@ FROM ruby:$RUBY_VERSION
 
 # Install libvips for Active Storage preview support
 RUN DEBIAN_FRONTEND=noninteractive \
-    TERM=dumb \
     apt-get update -qq && \
     apt-get install -y --force-yes build-essential libvips bash bash-completion libffi-dev tzdata postgresql nodejs npm ca-certificates && \
     npm config set strict-ssl false && \
