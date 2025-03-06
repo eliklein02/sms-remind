@@ -22,21 +22,25 @@ ENV RAILS_LOG_TO_STDOUT="1" \
     RAILS_ENV="production" \
     BUNDLE_WITHOUT="development" 
 
+
+
+
 # Install application gems
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
 
+ARG SECRET_KEY_BASE
+ENV SECRET_KEY_BASE=${SECRET_KEY_BASE}
+
 # Copy application code
 COPY . .
-
-# Add wait-for-it script
-COPY wait-for-it.sh /usr/bin/wait-for-it.sh
-RUN chmod +x /usr/bin/wait-for-it.sh
 
 RUN yarn config set strict-ssl false
 
 # Install JavaScript dependencies
 RUN yarn install
+
+ENV SECRET_KEY_BASE=1
 
 RUN RAILS_ENV=production bundle exec rake assets:precompile
 
@@ -55,4 +59,4 @@ ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 EXPOSE 3500
 
 # CMD ["wait-for-it.sh", "db:5432", "--", "./bin/rails", "server", "-p", "3500"]
-CMD ["foreman", "start"]
+CMD ["./bin/rails", "server", "-p", "3500"]
