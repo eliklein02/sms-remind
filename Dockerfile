@@ -53,10 +53,9 @@ RUN SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile
 RUN chmod +x /rails/bin/docker-entrypoint
 
 # Entrypoint prepares the database.
-ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
 # Start the server by default, this can be overwritten at runtime
-EXPOSE 3500
+EXPOSE 3050
 
 # CMD ["wait-for-it.sh", "db:5432", "--", "./bin/rails", "server", "-p", "3500"]
-CMD ["./bin/rails", "server", "-p", "3500"]
+CMD ["./bin/rails", "server", "-p", "3050"]

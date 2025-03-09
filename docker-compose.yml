@@ -12,9 +12,10 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
+
   web:
     build: .
-    command: "./bin/rails server -p 3500"
+    command: bash -c "bundle exec rails db:prepare && bundle exec rails s -p 3050"
     environment:
       - DATABASE_URL=postgres://postgres:0902@db:5432/sms_remind_production
       - RAILS_ENV=${RAILS_ENV}
@@ -26,16 +27,16 @@ services:
       - SECRET_KEY_BASE=${SECRET_KEY_BASE}
       - TZ=America/New_York
     volumes:
-      - ~/sms-remind:/rails
-      - ~/sms-remind/storage:/rails/storage
+      - .:/rails
+      - ./storage:/rails/storage
     depends_on:
       - db
     ports:
-      - "3500:3500"
+      - "3050:3050"
 
   worker:
     build: .
-    command: "bundle exec rake jobs:work"
+    command: bash -c "bundle exec rails db:prepare && bundle exec rake jobs:work"
     environment:
       - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@db:5432/sms_remind_production
       - RAILS_ENV=${RAILS_ENV}
@@ -47,8 +48,8 @@ services:
       - SECRET_KEY_BASE=${SECRET_KEY_BASE}
       - TZ=America/New_York
     volumes:
-      - ~/sms-remind:/rails
-      - ~/sms-remind/storage:/rails/storage
+      - .:/rails
+      - ./storage:/rails/storage
     depends_on:
       - web
 
