@@ -95,3 +95,7 @@ gem "chartkick", "~> 5.1"
 gem "groupdate", "~> 6.5"
 
 gem "tzip", "~> 0.0.4"
+
+gem "rss", "~> 0.3.1"
+
+gem "httparty", "~> 0.22.0"

@@ -16,6 +16,8 @@ Rails.application.routes.draw do
   post "/check_phone_number" => "views#check_phone_number"
 
   post "/do_something" => "api#do_something"
+  
+  post "/test" => "api#test"
 
   get "/test_json" => "api#test_json"
 

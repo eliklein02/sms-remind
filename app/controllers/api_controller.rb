@@ -1,8 +1,9 @@
 class ApiController < ApplicationController
     require 'chronic'
-    require 'nokogiri'
+    require 'rss'
     require 'twilio-ruby'
     require 'net/http'
+    require 'httparty'
 
 
     include HelperTools
@@ -11,6 +12,17 @@ class ApiController < ApplicationController
 
     skip_before_action :verify_authenticity_token
 
+    def test
+        q = params[:q]
+        url = "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q=#{q}"
+        response = HTTParty.get(url)
+        rss = RSS::Parser.parse(response.body)
+        first_five = rss.items.slice(0..2)
+        headlines = first_five.map do |f|
+            f.title
+        end
+        to_return headlines.join(" || ")
+    end
 
     def twilio_webhook
         from_number = params[:From]
@@ -18,6 +30,17 @@ class ApiController < ApplicationController
         body_down = body.downcase
         body_first_word = body_down.split(" ")[0]
         case body_first_word
+        when "news"
+            q = body.split(" ").slice(1..-1).join(" ")
+            url = "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q=#{q}"
+            response = HTTParty.get(url)
+            rss = RSS::Parser.parse(response.body)
+            first_five = rss.items.slice(0..4)
+            headlines = first_five.map do |f|
+                f.title
+            end
+            to_return = headlines.join(" || ")
+            send_sms(from_number, to_return)
         when "register", "signup"
             user = User.find_or_initialize_by(phone_number: from_number)
             send_sms(from_number, "You are already registered with Remind.") and return if user.persisted?
