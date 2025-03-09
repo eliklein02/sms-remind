@@ -98,6 +98,7 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [ :id ]
   config.hosts << "192.168.1.58"
   config.hosts << "47.20.142.82"
+  config.hosts << "192dnsserver.com"
   # Enable DNS rebinding protection and other `Host` header attacks.
   # config.hosts = [
   #   "example.com",     # Allow requests from example.com
