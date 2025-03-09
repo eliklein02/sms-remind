@@ -31,6 +31,7 @@ class ApiController < ApplicationController
         body_first_word = body_down.split(" ")[0]
         case body_first_word
         when "news"
+            Event.create(user_phone_number: from_number, event_type: "News Query")
             q = body.split(" ").slice(1..-1).join(" ")
             url = "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q=#{q}"
             response = HTTParty.get(url)
