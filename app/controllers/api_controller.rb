@@ -35,7 +35,7 @@ class ApiController < ApplicationController
             url = "https://news.google.com/rss/search?hl=en-US&gl=US&ceid=US:en&q=#{q}"
             response = HTTParty.get(url)
             rss = RSS::Parser.parse(response.body)
-            first_five = rss.items.slice(0..4)
+            first_five = rss.items.slice(0..2)
             headlines = first_five.map do |f|
                 f.title
             end
