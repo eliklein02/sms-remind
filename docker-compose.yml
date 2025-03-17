@@ -17,7 +17,7 @@ services:
     build: .
     command: bash -c "bundle exec rails db:prepare && bundle exec rails s -p 3050"
     environment:
-      - DATABASE_URL=postgres://postgres:0902@db:5432/sms_remind_production
+      - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD}@db:5432/sms_remind_production
       - RAILS_ENV=${RAILS_ENV}
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_DB=${POSTGRES_DB}
