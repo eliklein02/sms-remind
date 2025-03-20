@@ -68,7 +68,7 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "twilio-ruby", "~> 7.4"
+gem "twilio-ruby", "~> 7.5"
 
 gem "chronic", "~> 0.10.2"
 
