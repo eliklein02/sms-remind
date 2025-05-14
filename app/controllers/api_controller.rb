@@ -1,9 +1,9 @@
 class ApiController < ApplicationController
-    require 'chronic'
-    require 'rss'
-    require 'twilio-ruby'
-    require 'net/http'
-    require 'httparty'
+    require "chronic"
+    require "rss"
+    require "twilio-ruby"
+    require "net/http"
+    require "httparty"
 
 
     include HelperTools
@@ -72,7 +72,8 @@ class ApiController < ApplicationController
             send_sms(from_number, definition)
             Event.create(user_phone_number: from_number, event_type: "Dictionary Query")
         else
-            handle_reminder(from_number, body)
+            allowed_numbers = [ "+19176482993", "+17183446305" ]
+            handle_reminder(from_number, body) if allowed_numbers.include?(from_number)
         end
         render json: { message: "All Good" }, status: :ok
     end
@@ -88,21 +89,21 @@ class ApiController < ApplicationController
           parameters: {
             model: "gpt-4o",
             messages: [
-                { role: "user", content: 
-                                        # "You are a natural language time parser. You will return the time and subject and type of reminder given to you by a human in the following format in UTC: 'yyyy-mm-dd, hh:mm:ss (AM/PM), UTC#subject of the reminder#type of reminder#logic you used to get the timing and time zones and hours correct, including details like hours and time zone differneces and why you returned the given hour.
-                                        # You will take the current time, and I will provide the time zone that the message is coming from, and use the natural language time given to you by the user to return the time in the format I just mentioned, taking into consideration the time zone differences.
-                                        # If no time is provided, and there is only a subject, you will return the time as one hour from now.
-                                        # You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something
-                                        # including 'tomorrow', or the like, you will return the date as the same day because that is what they mean.
-                                        # Or another example, if the user says a specific time, you will return the next instance of that time on the clock, so if now is 1pm and they say 1 oclock that means 1am and so forth, unless of course specified otherwise.)
-                                        # You will return ONLY the time in the format I mentioned, and no more words.
-                                        # Seconds are also valid, they might say in a minute and 30 seconds, and you will return the current time plus 1 minute and 30 seconds and so forth for other time increments.
-                                        # You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
-                                        # As for the third section, the type, by default you will return as #{default}, unless the user specifies that the reminder type should be #{reverse}, which in that case you will return
-                                        # #{reverse}, (NOT IF THE SUBJECT INCLUDES A PHONE CALL AS WHAT THEY NEED TO BE REMINDED ABOUT, YOU WILL UNDERSTAND THE DIFFERENCE).
-                                        # Here is the user's time zone: #{time_zone}
-                                        # Here is the current time: #{now}
-                                        # Here is the user's input: #{input}" 
+                { role: "user", content:
+                                         # "You are a natural language time parser. You will return the time and subject and type of reminder given to you by a human in the following format in UTC: 'yyyy-mm-dd, hh:mm:ss (AM/PM), UTC#subject of the reminder#type of reminder#logic you used to get the timing and time zones and hours correct, including details like hours and time zone differneces and why you returned the given hour.
+                                         # You will take the current time, and I will provide the time zone that the message is coming from, and use the natural language time given to you by the user to return the time in the format I just mentioned, taking into consideration the time zone differences.
+                                         # If no time is provided, and there is only a subject, you will return the time as one hour from now.
+                                         # You will use some logical reasoning to determine the time (ie, if the current time is after midnight, but before 4am, and the user says something
+                                         # including 'tomorrow', or the like, you will return the date as the same day because that is what they mean.
+                                         # Or another example, if the user says a specific time, you will return the next instance of that time on the clock, so if now is 1pm and they say 1 oclock that means 1am and so forth, unless of course specified otherwise.)
+                                         # You will return ONLY the time in the format I mentioned, and no more words.
+                                         # Seconds are also valid, they might say in a minute and 30 seconds, and you will return the current time plus 1 minute and 30 seconds and so forth for other time increments.
+                                         # You will also return the subject with correct capitalization and corrected spelling errors after the # like we discussed.
+                                         # As for the third section, the type, by default you will return as #{default}, unless the user specifies that the reminder type should be #{reverse}, which in that case you will return
+                                         # #{reverse}, (NOT IF THE SUBJECT INCLUDES A PHONE CALL AS WHAT THEY NEED TO BE REMINDED ABOUT, YOU WILL UNDERSTAND THE DIFFERENCE).
+                                         # Here is the user's time zone: #{time_zone}
+                                         # Here is the current time: #{now}
+                                         # Here is the user's input: #{input}"
                                          "You are a natural language time parser. Return the time, subject, and type of reminder given by a human in the following format in UTC:
                                          yyyy-mm-dd, hh:mm:ss AM/PM UTC#subject of the reminder#type of reminder
                                          here is the user's input: #{input}
@@ -181,11 +182,11 @@ class ApiController < ApplicationController
             to_send << "#{i+1}: #{e}"
         end
         to_send = to_send.join(". ")
-        return to_send
+        to_send
     end
 
     def do_something
-        time = Chronic.parse('in 5 seconds')
+        time = Chronic.parse("in 5 seconds")
         respond_to do |format|
             format.json { render json: { message: "Scheduled reminder for #{time}" } }
         end
