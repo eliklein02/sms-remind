@@ -72,8 +72,9 @@ class ApiController < ApplicationController
             send_sms(from_number, definition)
             Event.create(user_phone_number: from_number, event_type: "Dictionary Query")
         else
-            allowed_numbers = [ "+19176482993", "+17183446305" ]
+            allowed_numbers = [ "+19176482993", "+17183446305", "+13474601456" ]
             handle_reminder(from_number, body) if allowed_numbers.include?(from_number)
+            return
         end
         render json: { message: "All Good" }, status: :ok
     end
